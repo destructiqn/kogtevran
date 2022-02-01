@@ -74,6 +74,29 @@ var (
 			conn.EnableCompression <- int(threshold)
 			return packet.Packet, true, nil
 		},
+		0x12: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			if !conn.IsModuleEnabled(ModuleAntiKnockback) {
+				return packet.Packet, true, nil
+			}
+
+			var (
+				EntityID pk.VarInt
+				X        pk.Short
+				Y        pk.Short
+				Z        pk.Short
+			)
+
+			err = packet.Scan(&EntityID, &X, &Y, &Z)
+			if err != nil {
+				return
+			}
+
+			if int32(EntityID) != conn.EntityID {
+				return packet.Packet, true, nil
+			}
+
+			return pk.Marshal(0x12, EntityID, pk.Short(0), pk.Short(0), pk.Short(0)), true, nil
+		},
 		0x39: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
 				Flags               pk.Byte

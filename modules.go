@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	ModuleFlight = "flight"
+	ModuleFlight        = "flight"
+	ModuleAntiKnockback = "antiKnockback"
 )
 
 type Module interface {
@@ -30,6 +31,7 @@ func (m *DefaultModule) IsEnabled() bool {
 
 func RegisterDefaultModules(conn *WrappedConn) {
 	conn.RegisterModule(&Flight{})
+	conn.RegisterModule(&AntiKnockback{})
 }
 
 type Flight struct {
@@ -53,4 +55,17 @@ func (f *Flight) Toggle() (bool, error) {
 
 	f.Enabled = !f.Enabled
 	return f.Enabled, nil
+}
+
+type AntiKnockback struct {
+	DefaultModule
+}
+
+func (a *AntiKnockback) GetIdentifier() string {
+	return ModuleAntiKnockback
+}
+
+func (a *AntiKnockback) Toggle() (bool, error) {
+	a.Enabled = !a.Enabled
+	return a.Enabled, nil
 }
