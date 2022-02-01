@@ -45,6 +45,7 @@ var (
 				}
 
 				conn.EntityID = int32(EntityID)
+				conn.resetEntities()
 			}
 
 			return packet.Packet, true, nil
@@ -57,28 +58,80 @@ var (
 			return packet.Packet, true, nil
 		},
 		0x03: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if conn.State != ConnStateLogin {
-				return packet.Packet, true, nil
+			switch conn.State {
+			case ConnStateLogin:
+				if conn.State != ConnStateLogin {
+					return packet.Packet, true, nil
+				}
+
+				log.Println("handling compression")
+				var threshold pk.VarInt
+				err = packet.Scan(&threshold)
+				if err != nil {
+					return packet.Packet, false, err
+				}
+
+				conn.Compression = true
+				log.Println("using s2c compression threshold", threshold)
+				conn.Server.SetThreshold(int(threshold))
+				conn.EnableCompression <- int(threshold)
 			}
 
-			log.Println("handling compression")
-			var threshold pk.VarInt
-			err = packet.Scan(&threshold)
-			if err != nil {
-				return packet.Packet, false, err
-			}
-
-			conn.Compression = true
-			log.Println("using s2c compression threshold", threshold)
-			conn.Server.SetThreshold(int(threshold))
-			conn.EnableCompression <- int(threshold)
 			return packet.Packet, true, nil
 		},
-		0x12: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if !conn.IsModuleEnabled(ModuleAntiKnockback) {
-				return packet.Packet, true, nil
+		// Player Position And Look
+		0x08: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				X, Y, Z    pk.Double
+				Yaw, Pitch pk.Float
+				Flags      pk.Byte
+			)
+
+			err = packet.Scan(&X, &Y, &Z, &Yaw, &Pitch, &Flags)
+			if err != nil {
+				return
 			}
 
+			if Flags&0x01 > 0 {
+				conn.Location.X += float64(X)
+			} else {
+				conn.Location.X = float64(X)
+			}
+
+			if Flags&0x02 > 0 {
+				conn.Location.Y += float64(Y)
+			} else {
+				conn.Location.Y = float64(Y)
+			}
+
+			if Flags&0x04 > 0 {
+				conn.Location.Z += float64(Z)
+			} else {
+				conn.Location.Z = float64(Z)
+			}
+
+			return packet.Packet, true, nil
+		},
+		// Spawn Player
+		0x0C: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				EntityID    pk.VarInt
+				PlayerUUID  pk.UUID
+				X, Y, Z     pk.Int
+				Yaw, Pitch  pk.Angle
+				CurrentItem pk.Short
+			)
+
+			err = packet.Scan(&EntityID, &PlayerUUID, &X, &Y, &Z, &Yaw, &Pitch, &CurrentItem)
+			if err != nil {
+				return
+			}
+
+			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			return packet.Packet, true, nil
+		},
+		// Entity Velocity
+		0x12: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID pk.VarInt
 				X        pk.Short
@@ -91,11 +144,97 @@ var (
 				return
 			}
 
-			if int32(EntityID) != conn.EntityID {
+			if !conn.IsModuleEnabled(ModuleAntiKnockback) || int32(EntityID) != conn.EntityID {
 				return packet.Packet, true, nil
 			}
 
 			return pk.Marshal(0x12, EntityID, pk.Short(0), pk.Short(0), pk.Short(0)), true, nil
+		},
+		// Destroy Entities
+		0x13: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				Count     pk.VarInt
+				EntityIDs []pk.VarInt
+			)
+
+			err = packet.Scan(&Count, &pk.Ary{
+				Len: &Count,
+				Ary: &EntityIDs,
+			})
+			if err != nil {
+				return
+			}
+
+			return packet.Packet, true, nil
+		},
+		// Entity
+		0x14: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var EntityID pk.VarInt
+			err = packet.Scan(&EntityID)
+			if err != nil {
+				return
+			}
+
+			conn.initEntity(int32(EntityID))
+			return packet.Packet, true, nil
+		},
+		// Entity Relative Move
+		0x15: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				EntityID pk.VarInt
+				X        pk.Byte
+				Y        pk.Byte
+				Z        pk.Byte
+				OnGround pk.Boolean
+			)
+
+			err = packet.Scan(&EntityID, &X, &Y, &Z, &OnGround)
+			if err != nil {
+				return
+			}
+
+			conn.entityRelativeMove(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			return packet.Packet, true, nil
+		},
+		// Entity Look And Relative Move
+		0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				EntityID pk.VarInt
+				X        pk.Byte
+				Y        pk.Byte
+				Z        pk.Byte
+				Yaw      pk.Angle
+				Pitch    pk.Angle
+				OnGround pk.Boolean
+			)
+
+			err = packet.Scan(&EntityID, &X, &Y, &Z, &Yaw, &Pitch, &OnGround)
+			if err != nil {
+				return
+			}
+
+			conn.entityRelativeMove(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			return packet.Packet, true, nil
+		},
+		// Entity Teleport
+		0x18: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				EntityID pk.VarInt
+				X        pk.Int
+				Y        pk.Int
+				Z        pk.Int
+				Yaw      pk.Angle
+				Pitch    pk.Angle
+				OnGround pk.Boolean
+			)
+
+			err = packet.Scan(&EntityID, &X, &Y, &Z, &Yaw, &Pitch, &OnGround)
+			if err != nil {
+				return
+			}
+
+			conn.entityTeleport(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			return packet.Packet, true, nil
 		},
 		0x39: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
@@ -112,7 +251,7 @@ var (
 			if conn.IsModuleEnabled(ModuleFlight) {
 				go func(conn *WrappedConn) {
 					time.Sleep(100 * time.Millisecond)
-					err = conn.WriteClient(pk.Marshal(0x39, pk.Byte(0x04), pk.Float(0.1), pk.Float(0.1)))
+					err = conn.WriteClient(pk.Marshal(0x39, pk.Byte(0x04), pk.Float(0.05), pk.Float(0.1)))
 				}(conn)
 			}
 
@@ -194,14 +333,8 @@ var (
 			return pk.Marshal(0x03, OnGround || pk.Boolean(conn.IsModuleEnabled(ModuleNoFall))), true, nil
 		},
 		0x04: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if !conn.IsModuleEnabled(ModuleNoFall) {
-				return packet.Packet, true, nil
-			}
-
 			var (
-				X        pk.Double
-				Y        pk.Double
-				Z        pk.Double
+				X, Y, Z  pk.Double
 				OnGround pk.Boolean
 			)
 
@@ -210,7 +343,29 @@ var (
 				return
 			}
 
+			conn.Location.X, conn.Location.Y, conn.Location.Z = float64(X), float64(Y), float64(Z)
+
+			if !conn.IsModuleEnabled(ModuleNoFall) {
+				return packet.Packet, true, nil
+			}
+
 			return pk.Marshal(0x04, X, Y, Z, pk.Boolean(true)), true, nil
+		},
+		// Player Position And Look
+		0x06: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var (
+				X, Y, Z    pk.Double
+				Yaw, Pitch pk.Float
+				OnGround   pk.Boolean
+			)
+
+			err = packet.Scan(&X, &Y, &Z, &Yaw, &Pitch, &OnGround)
+			if err != nil {
+				return
+			}
+
+			conn.Location.X, conn.Location.Y, conn.Location.Z = float64(X), float64(Y), float64(Z)
+			return packet.Packet, true, nil
 		},
 		//0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 		//	err = HandlePluginMessage(packet.Packet, "client")

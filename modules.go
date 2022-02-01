@@ -2,12 +2,14 @@ package main
 
 import (
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
+	"time"
 )
 
 const (
 	ModuleFlight        = "flight"
 	ModuleAntiKnockback = "antiKnockback"
 	ModuleNoFall        = "noFall"
+	ModuleKillAura      = "killAura"
 )
 
 type Module interface {
@@ -15,6 +17,12 @@ type Module interface {
 	GetIdentifier() string
 	Toggle() (bool, error)
 	IsEnabled() bool
+}
+
+type TickingModule interface {
+	Module
+	Tick() error
+	GetInterval() time.Duration
 }
 
 type DefaultModule struct {
@@ -43,6 +51,7 @@ func RegisterDefaultModules(conn *WrappedConn) {
 	conn.RegisterModule(&Flight{})
 	conn.RegisterModule(&AntiKnockback{})
 	conn.RegisterModule(&NoFall{})
+	conn.RegisterModule(&KillAura{})
 }
 
 type Flight struct {
@@ -59,7 +68,7 @@ func (f *Flight) Toggle() (bool, error) {
 		flags = 0
 	}
 
-	err := f.Conn.WriteClient(pk.Marshal(0x39, pk.Byte(flags), pk.Float(0.1), pk.Float(0.1)))
+	err := f.Conn.WriteClient(pk.Marshal(0x39, pk.Byte(flags), pk.Float(0.05), pk.Float(0.1)))
 	if err != nil {
 		return f.Enabled, err
 	}
@@ -82,4 +91,33 @@ type NoFall struct {
 
 func (s *SimpleModule) GetIdentifier() string {
 	return ModuleNoFall
+}
+
+type KillAura struct {
+	SimpleModule
+}
+
+func (k *KillAura) GetIdentifier() string {
+	return ModuleKillAura
+}
+
+func (k *KillAura) Tick() error {
+	k.Conn.EntitiesMutex.Lock()
+	for id, entity := range k.Conn.Entities {
+		if entity.Location.Distance(k.Conn.Location) > 5 {
+			continue
+		}
+
+		err := k.Conn.Attack(id)
+		if err != nil {
+			return err
+		}
+	}
+
+	k.Conn.EntitiesMutex.Unlock()
+	return nil
+}
+
+func (k *KillAura) GetInterval() time.Duration {
+	return 50 * time.Millisecond
 }

@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
+	"log"
 	"strconv"
 	"strings"
 
 	"github.com/Tnze/go-mc/chat"
+	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
 type CommandHandler func(args []string, conn *WrappedConn) error
@@ -52,6 +53,16 @@ var Commands = map[string]CommandHandler{
 		}
 
 		return conn.WriteClient(pk.Marshal(0x1D, pk.VarInt(conn.EntityID), pk.Byte(id), pk.Byte(amplifier), pk.VarInt(100000), pk.Boolean(true)))
+	},
+
+	"entities": func(args []string, conn *WrappedConn) error {
+		log.Println(conn.Entities)
+		return nil
+	},
+
+	"location": func(args []string, conn *WrappedConn) error {
+		log.Println(*conn.Location)
+		return nil
 	},
 }
 
