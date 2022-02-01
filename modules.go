@@ -7,6 +7,7 @@ import (
 const (
 	ModuleFlight        = "flight"
 	ModuleAntiKnockback = "antiKnockback"
+	ModuleNoFall        = "noFall"
 )
 
 type Module interface {
@@ -21,6 +22,15 @@ type DefaultModule struct {
 	Enabled bool
 }
 
+type SimpleModule struct {
+	DefaultModule
+}
+
+func (s *SimpleModule) Toggle() (bool, error) {
+	s.Enabled = !s.Enabled
+	return s.Enabled, nil
+}
+
 func (m *DefaultModule) Register(conn *WrappedConn) {
 	m.Conn = conn
 }
@@ -32,6 +42,7 @@ func (m *DefaultModule) IsEnabled() bool {
 func RegisterDefaultModules(conn *WrappedConn) {
 	conn.RegisterModule(&Flight{})
 	conn.RegisterModule(&AntiKnockback{})
+	conn.RegisterModule(&NoFall{})
 }
 
 type Flight struct {
@@ -58,14 +69,17 @@ func (f *Flight) Toggle() (bool, error) {
 }
 
 type AntiKnockback struct {
-	DefaultModule
+	SimpleModule
 }
 
 func (a *AntiKnockback) GetIdentifier() string {
 	return ModuleAntiKnockback
 }
 
-func (a *AntiKnockback) Toggle() (bool, error) {
-	a.Enabled = !a.Enabled
-	return a.Enabled, nil
+type NoFall struct {
+	SimpleModule
+}
+
+func (s *SimpleModule) GetIdentifier() string {
+	return ModuleNoFall
 }

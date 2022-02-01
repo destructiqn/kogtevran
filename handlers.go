@@ -182,7 +182,35 @@ var (
 			return packet.Packet, !handled, nil
 		},
 		0x03: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			return pk.Marshal(0x03, pk.Boolean(false)), true, nil
+			var (
+				OnGround pk.Boolean
+			)
+
+			err = packet.Scan(&OnGround)
+			if err != nil {
+				return
+			}
+
+			return pk.Marshal(0x03, OnGround || pk.Boolean(conn.IsModuleEnabled(ModuleNoFall))), true, nil
+		},
+		0x04: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			if !conn.IsModuleEnabled(ModuleNoFall) {
+				return packet.Packet, true, nil
+			}
+
+			var (
+				X        pk.Double
+				Y        pk.Double
+				Z        pk.Double
+				OnGround pk.Boolean
+			)
+
+			err = packet.Scan(&X, &Y, &Z, &OnGround)
+			if err != nil {
+				return
+			}
+
+			return pk.Marshal(0x04, X, Y, Z, pk.Boolean(true)), true, nil
 		},
 		//0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 		//	err = HandlePluginMessage(packet.Packet, "client")
