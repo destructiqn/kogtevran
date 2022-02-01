@@ -15,25 +15,49 @@ type PacketHandlerPool map[int32]PacketHandler
 var (
 	HandlersS2C = PacketHandlerPool{
 		0x01: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if encryptionResponse {
-				return packet.Packet, true, nil
-			}
+			switch conn.State {
+			case ConnStateLogin:
+				log.Println("accepting encryption request")
+				err = conn.WriteClient(packet.Packet)
+				if err != nil {
+					next = true
+					return
+				}
 
-			log.Println("accepting encryption request")
-			err = conn.WriteClient(packet.Packet)
-			if err != nil {
-				next = true
+				key := <-conn.EnableEncryption
+				s2ce, s2cd := newSymmetricEncryption(key)
+				conn.Server.SetCipher(s2ce, s2cd) // for server -> client
 				return
+			case ConnStatePlay:
+				var (
+					EntityID         pk.Int
+					GameMode         pk.UnsignedByte
+					Dimension        pk.Byte
+					Difficulty       pk.UnsignedByte
+					MaxPlayers       pk.UnsignedByte
+					LevelType        pk.String
+					ReducedDebugInfo pk.Boolean
+				)
+
+				err = packet.Scan(&EntityID, &GameMode, &Dimension, &Difficulty, &MaxPlayers, &LevelType, &ReducedDebugInfo)
+				if err != nil {
+					return
+				}
+
+				conn.EntityID = int32(EntityID)
 			}
 
-			key := <-enableEncryption
-			s2ce, s2cd := newSymmetricEncryption(key)
-			conn.Server.SetCipher(s2ce, s2cd) // for server -> client
-			log.Println("enabled s2c encryption")
-			return
+			return packet.Packet, true, nil
+		},
+		0x02: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			if conn.State == ConnStateLogin {
+				conn.State = ConnStatePlay
+			}
+
+			return packet.Packet, true, nil
 		},
 		0x03: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if compression {
+			if conn.State != ConnStateLogin {
 				return packet.Packet, true, nil
 			}
 
@@ -44,10 +68,10 @@ var (
 				return packet.Packet, false, err
 			}
 
-			compression = true
+			conn.Compression = true
 			log.Println("using s2c compression threshold", threshold)
 			conn.Server.SetThreshold(int(threshold))
-			enableCompression <- int(threshold)
+			conn.EnableCompression <- int(threshold)
 			return packet.Packet, true, nil
 		},
 		0x39: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
@@ -95,15 +119,15 @@ var (
 
 	HandlersC2S = PacketHandlerPool{
 		0x00: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if handshake {
+			if conn.State != ConnStateHandshake {
 				return packet.Packet, true, nil
 			}
 			log.Println("handling handshake")
-			handshake = true
+			conn.State = ConnStateLogin
 			return pk.Marshal(0x00, pk.VarInt(47), pk.String(fmt.Sprintf("%s ", RemoteHost)), pk.UnsignedShort(RemotePort), pk.VarInt(2)), true, nil
 		},
 		0x01: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if !encryptionResponse {
+			if conn.State == ConnStateLogin {
 				log.Println("accepting encryption response")
 				key := <-secretChannel
 				log.Println("accepted shared secret:", key)
@@ -116,10 +140,9 @@ var (
 				c2se, c2sd := newSymmetricEncryption(key)
 				conn.Client.SetCipher(c2se, c2sd) // for client -> server
 				log.Println("enabled c2s encryption")
-				enableEncryption <- key
-				encryptionResponse = true
+				conn.EnableEncryption <- key
 
-				threshold := <-enableCompression
+				threshold := <-conn.EnableCompression
 				log.Println("using c2s compression threshold", threshold)
 				conn.Client.SetThreshold(threshold)
 				return

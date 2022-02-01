@@ -21,8 +21,6 @@ import (
 var (
 	RemoteHost = "46.105.114.5"
 	RemotePort = 25565
-	//RemoteHost = "localhost"
-	//RemotePort = 25577
 )
 
 var (
@@ -81,15 +79,6 @@ func main() {
 		go pipe(conn, ConnC2S)
 	}
 }
-
-var (
-	handshake          = false
-	compression        = false
-	encryptionResponse = false
-
-	enableEncryption  = make(chan []byte)
-	enableCompression = make(chan int)
-)
 
 func pipe(conn *WrappedConn, typ int) {
 	srcName, dstName := "client", "server"
@@ -165,10 +154,6 @@ func pipe(conn *WrappedConn, typ int) {
 		fmt.Println("last packet was", FormatPacket(lastPacket.ID, typ), "")
 		fmt.Println(fmt.Sprintf("last packet dump:\n%s", hex.Dump(lastPacket.Data)))
 	}
-
-	handshake = false
-	compression = false
-	encryptionResponse = false
 }
 
 func GetConnectAddress() string {

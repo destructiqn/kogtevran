@@ -8,6 +8,14 @@ import (
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
+type ConnectionState int
+
+const (
+	ConnStateHandshake ConnectionState = 0
+	ConnStateLogin     ConnectionState = 1
+	ConnStatePlay      ConnectionState = 2
+)
+
 type WrappedConn struct {
 	Closed  bool
 	Server  *net.Conn
@@ -16,6 +24,13 @@ type WrappedConn struct {
 
 	ServerWrite sync.Mutex
 	ClientWrite sync.Mutex
+
+	Compression       bool
+	State             ConnectionState
+	EnableCompression chan int
+	EnableEncryption  chan []byte
+
+	EntityID int32
 }
 
 func (w *WrappedConn) IsModuleEnabled(moduleID string) bool {
@@ -49,9 +64,11 @@ func (w *WrappedConn) Disconnect() {
 
 func WrapConn(server, client *net.Conn) *WrappedConn {
 	return &WrappedConn{
-		Server:  server,
-		Client:  client,
-		Modules: make(map[string]Module),
+		Server:            server,
+		Client:            client,
+		Modules:           make(map[string]Module),
+		EnableEncryption:  make(chan []byte),
+		EnableCompression: make(chan int),
 	}
 }
 
