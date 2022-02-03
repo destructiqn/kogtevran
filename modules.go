@@ -10,6 +10,7 @@ const (
 	ModuleAntiKnockback = "antiKnockback"
 	ModuleNoFall        = "noFall"
 	ModuleKillAura      = "killAura"
+	ModuleSpammer 		= "spammer"
 )
 
 type Module interface {
@@ -52,6 +53,7 @@ func RegisterDefaultModules(conn *WrappedConn) {
 	conn.RegisterModule(&AntiKnockback{})
 	conn.RegisterModule(&NoFall{})
 	conn.RegisterModule(&KillAura{})
+	conn.RegisterModule(&Spammer{})
 }
 
 type Flight struct {
@@ -120,4 +122,20 @@ func (k *KillAura) Tick() error {
 
 func (k *KillAura) GetInterval() time.Duration {
 	return 50 * time.Millisecond
+}
+
+type Spammer struct {
+	SimpleModule
+}
+
+func (s *Spammer) Tick() error {
+	return s.Conn.WriteServer(pk.Marshal(0x01, pk.String("Я курочка")))	
+}
+
+func (s *Spammer) GetInterval() time.Duration {
+	return 20 * time.Second
+}
+
+func (s *Spammer) GetIdentifier() string {
+	return ModuleSpammer
 }
