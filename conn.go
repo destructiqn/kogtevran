@@ -24,7 +24,8 @@ type Entity struct {
 }
 
 type Location struct {
-	X, Y, Z float64
+	X, Y, Z    float64
+	Yaw, Pitch byte
 }
 
 func (l *Location) Distance(another *Location) float64 {
@@ -57,10 +58,10 @@ func (w *WrappedConn) initEntity(entityID int32) {
 	w.EntitiesMutex.Unlock()
 }
 
-func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64) {
+func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64, yaw, pitch byte) {
 	w.EntitiesMutex.Lock()
 	w.Entities[entityID] = &Entity{
-		Location: &Location{x, y, z},
+		Location: &Location{x, y, z, yaw, pitch},
 	}
 	w.EntitiesMutex.Unlock()
 }
@@ -76,13 +77,14 @@ func (w *WrappedConn) entityRelativeMove(entityID int32, dx, dy, dz float64) {
 	entity.Location.Z += dz
 }
 
-func (w *WrappedConn) entityTeleport(entityID int32, x, y, z float64) {
+func (w *WrappedConn) entityTeleport(entityID int32, x, y, z float64, yaw, pitch byte) {
 	entity, ok := w.Entities[entityID]
 	if !ok {
 		return
 	}
 
 	entity.Location.X, entity.Location.Y, entity.Location.Z = x, y, z
+	entity.Location.Yaw, entity.Location.Pitch = yaw, pitch
 }
 
 func (w *WrappedConn) resetEntities() {
