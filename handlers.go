@@ -257,10 +257,10 @@ var (
 
 			return packet.Packet, true, err
 		},
-		//0x3F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-		//	err = HandlePluginMessage(packet.Packet, "server")
-		//	return packet.Packet, true, err
-		//},
+		0x3F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			err = HandlePluginMessage(packet.Packet, "server")
+			return packet.Packet, true, err
+		},
 		0x40: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var Reason chat.Message
 			err = packet.Scan(&Reason)
@@ -365,7 +365,12 @@ var (
 			}
 
 			conn.Location.X, conn.Location.Y, conn.Location.Z = float64(X), float64(Y), float64(Z)
-			return packet.Packet, true, nil
+
+			if !conn.IsModuleEnabled(ModuleNoFall) {
+				return packet.Packet, true, nil
+			}
+
+			return pk.Marshal(0x06, X, Y, Z, Yaw, Pitch, pk.Boolean(true)), true, nil
 		},
 		//0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 		//	err = HandlePluginMessage(packet.Packet, "client")
