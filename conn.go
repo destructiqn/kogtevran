@@ -41,10 +41,8 @@ type WrappedConn struct {
 	ServerWrite sync.Mutex
 	ClientWrite sync.Mutex
 
-	Compression       bool
-	State             ConnectionState
-	EnableCompression chan int
-	EnableEncryption  chan []byte
+	State            ConnectionState
+	EnableEncryption chan []byte
 
 	EntityID      int32
 	Location      *Location
@@ -134,13 +132,12 @@ func (w *WrappedConn) Disconnect() {
 
 func WrapConn(server, client *net.Conn) *WrappedConn {
 	return &WrappedConn{
-		Server:            server,
-		Client:            client,
-		Modules:           make(map[string]Module),
-		Entities:          make(map[int32]*Entity),
-		Location:          &Location{},
-		EnableEncryption:  make(chan []byte),
-		EnableCompression: make(chan int),
+		Server:           server,
+		Client:           client,
+		Modules:          make(map[string]Module),
+		Entities:         make(map[int32]*Entity),
+		Location:         &Location{},
+		EnableEncryption: make(chan []byte),
 	}
 }
 

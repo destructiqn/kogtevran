@@ -12,6 +12,10 @@ import (
 type PacketHandler func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error)
 type PacketHandlerPool map[int32]PacketHandler
 
+const (
+	CompressionThreshold = 1024
+)
+
 var (
 	HandlersS2C = PacketHandlerPool{
 		0x01: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
@@ -68,13 +72,12 @@ var (
 				var threshold pk.VarInt
 				err = packet.Scan(&threshold)
 				if err != nil {
-					return packet.Packet, false, err
+					return
 				}
 
-				conn.Compression = true
 				log.Println("using s2c compression threshold", threshold)
 				conn.Server.SetThreshold(int(threshold))
-				conn.EnableCompression <- int(threshold)
+				return
 			}
 
 			return packet.Packet, true, nil
@@ -305,9 +308,13 @@ var (
 				log.Println("enabled c2s encryption")
 				conn.EnableEncryption <- key
 
-				threshold := <-conn.EnableCompression
-				log.Println("using c2s compression threshold", threshold)
-				conn.Client.SetThreshold(threshold)
+				err = conn.WriteClient(pk.Marshal(0x03, pk.VarInt(CompressionThreshold)))
+				if err != nil {
+					return
+				}
+
+				log.Println("using c2s compression threshold", CompressionThreshold)
+				conn.Client.SetThreshold(CompressionThreshold)
 				return
 			}
 
@@ -322,9 +329,7 @@ var (
 			return packet.Packet, !handled, nil
 		},
 		0x03: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			var (
-				OnGround pk.Boolean
-			)
+			var OnGround pk.Boolean
 
 			err = packet.Scan(&OnGround)
 			if err != nil {

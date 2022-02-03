@@ -32,7 +32,7 @@ func (l Listener) Accept() (Conn, error) {
 		Reader:    conn,
 		Writer:    conn,
 		threshold: -1,
-		bufPool: sync.Pool{
+		bufPool: &sync.Pool{
 			New: func() interface{} {
 				return new(bytes.Buffer)
 			},
@@ -47,7 +47,7 @@ type Conn struct {
 	io.Writer
 
 	threshold int
-	bufPool   sync.Pool
+	bufPool   *sync.Pool
 }
 
 // DialMC create a Minecraft connection
@@ -58,7 +58,7 @@ func DialMC(addr string) (*Conn, error) {
 		Reader:    conn,
 		Writer:    conn,
 		threshold: -1,
-		bufPool: sync.Pool{
+		bufPool: &sync.Pool{
 			New: func() interface{} {
 				return new(bytes.Buffer)
 			},
@@ -74,7 +74,7 @@ func DialMCTimeout(addr string, timeout time.Duration) (*Conn, error) {
 		Reader:    conn,
 		Writer:    conn,
 		threshold: -1,
-		bufPool: sync.Pool{
+		bufPool: &sync.Pool{
 			New: func() interface{} {
 				return new(bytes.Buffer)
 			},
@@ -90,7 +90,7 @@ func WrapConn(conn net.Conn) *Conn {
 		Reader:    conn,
 		Writer:    conn,
 		threshold: -1,
-		bufPool: sync.Pool{
+		bufPool: &sync.Pool{
 			New: func() interface{} {
 				return new(bytes.Buffer)
 			},
@@ -103,12 +103,12 @@ func (c *Conn) Close() error { return c.Socket.Close() }
 
 // ReadPacket read a Packet from Conn.
 func (c *Conn) ReadPacket(p *pk.Packet) error {
-	return p.UnPack(c.Reader, c.threshold, &c.bufPool)
+	return p.UnPack(c.Reader, c.threshold, c.bufPool)
 }
 
 // WritePacket write a Packet to Conn.
 func (c *Conn) WritePacket(p pk.Packet) error {
-	return p.Pack(c.Writer, c.threshold, &c.bufPool)
+	return p.Pack(c.Writer, c.threshold, c.bufPool)
 }
 
 // SetCipher load the decode/encode stream to this Conn
