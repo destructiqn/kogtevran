@@ -48,6 +48,7 @@ type WrappedConn struct {
 
 	EntityID      int32
 	Location      *Location
+	IsFlying      bool
 	Entities      map[int32]*Entity
 	EntitiesMutex sync.Mutex
 }

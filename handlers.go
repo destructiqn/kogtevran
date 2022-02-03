@@ -251,16 +251,17 @@ var (
 			if conn.IsModuleEnabled(ModuleFlight) {
 				go func(conn *WrappedConn) {
 					time.Sleep(100 * time.Millisecond)
-					err = conn.WriteClient(pk.Marshal(0x39, pk.Byte(0x04), pk.Float(0.05), pk.Float(0.1)))
+					flight := conn.Modules[ModuleFlight].(*Flight)
+					err = flight.Update()
 				}(conn)
 			}
 
 			return packet.Packet, true, err
 		},
-		0x3F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			err = HandlePluginMessage(packet.Packet, "server")
-			return packet.Packet, true, err
-		},
+		//0x3F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		//	err = HandlePluginMessage(packet.Packet, "server")
+		//	return packet.Packet, true, err
+		//},
 		0x40: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var Reason chat.Message
 			err = packet.Scan(&Reason)
@@ -371,6 +372,16 @@ var (
 			}
 
 			return pk.Marshal(0x06, X, Y, Z, Yaw, Pitch, pk.Boolean(true)), true, nil
+		},
+		0x13: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+			var Flags pk.Byte
+			err = packet.Scan(&Flags)
+			if err != nil {
+				return
+			}
+
+			conn.IsFlying = Flags&0x02 > 0
+			return packet.Packet, true, nil
 		},
 		//0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 		//	err = HandlePluginMessage(packet.Packet, "client")

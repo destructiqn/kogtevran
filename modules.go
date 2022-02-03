@@ -1,8 +1,9 @@
 package main
 
 import (
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"time"
+
+	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
 const (
@@ -48,7 +49,7 @@ func (m *DefaultModule) IsEnabled() bool {
 }
 
 func RegisterDefaultModules(conn *WrappedConn) {
-	conn.RegisterModule(&Flight{})
+	conn.RegisterModule(&Flight{Speed: 1})
 	conn.RegisterModule(&AntiKnockback{})
 	conn.RegisterModule(&NoFall{})
 	conn.RegisterModule(&KillAura{})
@@ -56,6 +57,7 @@ func RegisterDefaultModules(conn *WrappedConn) {
 
 type Flight struct {
 	DefaultModule
+	Speed float64
 }
 
 func (f *Flight) GetIdentifier() string {
@@ -63,18 +65,25 @@ func (f *Flight) GetIdentifier() string {
 }
 
 func (f *Flight) Toggle() (bool, error) {
-	flags := 0x04
-	if f.Enabled {
-		flags = 0
-	}
-
-	err := f.Conn.WriteClient(pk.Marshal(0x39, pk.Byte(flags), pk.Float(0.05), pk.Float(0.1)))
+	f.Enabled = !f.Enabled
+	err := f.Update()
 	if err != nil {
 		return f.Enabled, err
 	}
-
-	f.Enabled = !f.Enabled
 	return f.Enabled, nil
+}
+
+func (f *Flight) Update() error {
+	flags := 0
+	if f.Enabled {
+		flags = 0x04
+	}
+
+	if f.Conn.IsFlying {
+		flags |= 0x02
+	}
+
+	return f.Conn.WriteClient(pk.Marshal(0x39, pk.Byte(flags), pk.Float(0.05*f.Speed), pk.Float(0.1)))
 }
 
 type AntiKnockback struct {

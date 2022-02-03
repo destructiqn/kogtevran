@@ -37,6 +37,31 @@ var Commands = map[string]CommandHandler{
 		return conn.SendMessage(chat.Text(fmt.Sprintf("%s is now %s", module.GetIdentifier(), statusText)), ChatPositionAboveHotbar)
 	},
 
+	"set": func(args []string, conn *WrappedConn) error {
+		if len(args) < 2 {
+			return errors.New("not enough args")
+		}
+
+		switch strings.ToLower(args[0]) {
+		case "flightspeed", "fs":
+			speed, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+
+			flight := conn.Modules[ModuleFlight].(*Flight)
+			flight.Speed = float64(speed)
+			err = flight.Update()
+			if err != nil {
+				return err
+			}
+
+			_ = conn.SendMessage(chat.Text(fmt.Sprintf("flight speed amplifier is set to %.0f", flight.Speed)), ChatPositionAboveHotbar)
+		}
+
+		return nil
+	},
+
 	"effect": func(args []string, conn *WrappedConn) error {
 		if len(args) < 2 {
 			return errors.New("not enough args")
