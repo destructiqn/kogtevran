@@ -102,6 +102,25 @@ var Commands = map[string]CommandHandler{
 
 		return conn.WriteClient(pk.Marshal(0x20, pk.VarInt(conn.EntityID), pk.Int(1), pk.String("generic.movementSpeed"), pk.Double(speed), pk.VarInt(0)))
 	},
+
+	"open": func(args []string, conn *WrappedConn) error {
+		if len(args) < 1 {
+			return errors.New("not enough args")
+		}
+
+		id, err := strconv.Atoi(args[0])
+		if err != nil {
+			return err
+		}
+
+		data := []pk.FieldEncoder{pk.String("MiniDot"), pk.String("%"), pk.Byte(4), pk.String("available"), pk.String("list"), pk.Byte(16), pk.VarInt(id)}
+		for i := 1; i <= id; i++ {
+			data = append(data, pk.VarInt(i))
+		}
+
+		packet := pk.Marshal(0x3F, data...)
+		return conn.WriteClient(packet)
+	},
 }
 
 func HandleCommand(message string, conn *WrappedConn) bool {
