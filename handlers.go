@@ -3,13 +3,11 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/Tnze/go-mc/chat"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"log"
 	"time"
-	"strings"
-	"math/rand"
-	"translit"
+
+	"github.com/Tnze/go-mc/chat"
+	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
 type PacketHandler func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error)
@@ -134,15 +132,15 @@ var (
 				return
 			}
 
-			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, true)
+			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch), true)
 			return packet.Packet, true, nil
 		},
 		0x0F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
-				EntityID pk.VarInt
-				Type pk.UnsignedByte
-				X, Y, Z pk.Int
-				Yaw, Pitch, HeadPitch pk.Angle
+				EntityID                        pk.VarInt
+				Type                            pk.UnsignedByte
+				X, Y, Z                         pk.Int
+				Yaw, Pitch, HeadPitch           pk.Angle
 				VelocityX, VelocityY, VelocityZ pk.Short
 			)
 
@@ -151,7 +149,7 @@ var (
 				return
 			}
 
-			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, false)
+			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch), false)
 			return packet.Packet, true, nil
 		},
 		// Entity Velocity
@@ -432,35 +430,4 @@ func HandlePluginMessage(packet pk.Packet, srcName string) error {
 
 	fmt.Println(fmt.Sprintf("accepted plugin message from %s in channel %s:\n%s", srcName, Channel, hex.Dump(Data)))
 	return nil
-}
-
-func getProcessedMsgForSpam(str string) string {
-    symbols := make([]string, len(str))
-    symbols = strings.Split(str, "")
-
-    msg := make([]string, len(str))
-
-    for i := 0; i < len(symbols); i++ {
-        rand.Seed(time.Now().UnixNano())
-        ran := rand.Intn(7);
-        switch (ran) {
-        case 0:
-            msg[i] = translit.EncodeToALALC(symbols[i])
-        case 1:
-            msg[i] = translit.EncodeToBGN(symbols[i])
-        case 2:
-            msg[i] = translit.EncodeToBS(symbols[i])
-        case 3:
-            msg[i] = translit.EncodeToICAO(symbols[i])
-        case 4:
-            msg[i] = translit.EncodeToISO9A(symbols[i])
-        case 5:
-            msg[i] = translit.EncodeToISO9B(symbols[i])
-        case 6:
-            msg[i] = translit.EncodeToPCGN(symbols[i])
-        case 7:
-            msg[i] = translit.EncodeToScientific(symbols[i])
-        }
-    }
-    return strings.Join(msg, "")
 }

@@ -59,10 +59,10 @@ func (w *WrappedConn) initEntity(entityID int32) {
 	w.EntitiesMutex.Unlock()
 }
 
-func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64, isPlayer bool) {
+func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64, yaw, pitch byte, isPlayer bool) {
 	w.EntitiesMutex.Lock()
 	w.Entities[entityID] = &Entity{
-		Location: &Location{x, y, z},
+		Location: &Location{x, y, z, yaw, pitch},
 		isPlayer: isPlayer,
 	}
 	w.EntitiesMutex.Unlock()

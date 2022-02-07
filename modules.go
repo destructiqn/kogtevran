@@ -11,8 +11,8 @@ const (
 	ModuleAntiKnockback = "AntiKnockback"
 	ModuleNoFall        = "NoFall"
 	ModuleKillAura      = "KillAura"
-	ModuleSpammer		= "Spammer"
-	ModuleMobAura		= "MobAura"
+	ModuleSpammer       = "Spammer"
+	ModuleMobAura       = "MobAura"
 )
 
 type Module interface {
@@ -92,9 +92,7 @@ func (f *Flight) Update() error {
 
 type AntiKnockback struct {
 	SimpleModule
-	X int
-	Y int
-	Z int
+	X, Y, Z int
 }
 
 func (a *AntiKnockback) GetIdentifier() string {
@@ -130,7 +128,7 @@ func (k *KillAura) Tick() error {
 		}
 
 		// Hit animation
-		k.Conn.WriteClient(pk.Marshal(0x0B, pk.VarInt(k.Conn.EntityID), pk.UnsignedByte(0x00)))
+		_ = k.Conn.WriteClient(pk.Marshal(0x0B, pk.VarInt(k.Conn.EntityID), pk.UnsignedByte(0x00)))
 	}
 
 	k.Conn.EntitiesMutex.Unlock()
@@ -162,7 +160,7 @@ func (m *MobAura) Tick() error {
 		}
 
 		// Hit animation
-		m.Conn.WriteClient(pk.Marshal(0x0B, pk.VarInt(m.Conn.EntityID), pk.UnsignedByte(0x00)))
+		_ = m.Conn.WriteClient(pk.Marshal(0x0B, pk.VarInt(m.Conn.EntityID), pk.UnsignedByte(0x00)))
 	}
 
 	m.Conn.EntitiesMutex.Unlock()
@@ -183,7 +181,7 @@ func (s *Spammer) GetIdentifier() string {
 }
 
 func (s *Spammer) Tick() error {
-	processedMsg := getProcessedMsgForSpam(s.Message)
+	processedMsg := transliterate(s.Message)
 	return s.Conn.WriteServer(pk.Marshal(0x01, pk.String(processedMsg)))
 }
 
