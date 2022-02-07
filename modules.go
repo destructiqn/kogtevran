@@ -118,7 +118,7 @@ func (k *KillAura) GetIdentifier() string {
 func (k *KillAura) Tick() error {
 	k.Conn.EntitiesMutex.Lock()
 	for id, entity := range k.Conn.Entities {
-		if entity.Location.Distance(k.Conn.Location) > 7 || !entity.isPlayer {
+		if _, isPlayer := entity.(*Player); !isPlayer || entity.GetLocation().Distance(k.Conn.Location) > 7 {
 			continue
 		}
 
@@ -150,7 +150,7 @@ func (m *MobAura) GetIdentifier() string {
 func (m *MobAura) Tick() error {
 	m.Conn.EntitiesMutex.Lock()
 	for id, entity := range m.Conn.Entities {
-		if entity.Location.Distance(m.Conn.Location) > 7 || entity.isPlayer {
+		if _, isPlayer := entity.(*Player); isPlayer || entity.GetLocation().Distance(m.Conn.Location) > 7 {
 			continue
 		}
 

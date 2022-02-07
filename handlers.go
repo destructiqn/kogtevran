@@ -132,7 +132,17 @@ var (
 				return
 			}
 
-			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch), true)
+			player := &Player{
+				DefaultEntity{Location: &Location{
+					X:     float64(X) / 32,
+					Y:     float64(Y) / 32,
+					Z:     float64(Z) / 32,
+					Yaw:   byte(Yaw),
+					Pitch: byte(Pitch),
+				}},
+			}
+
+			conn.initPlayer(int(EntityID), player)
 			return packet.Packet, true, nil
 		},
 		0x0F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
@@ -149,16 +159,25 @@ var (
 				return
 			}
 
-			conn.initPositionedEntity(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch), false)
+			mob := &Mob{
+				DefaultEntity: DefaultEntity{Location: &Location{
+					X:     float64(X) / 32,
+					Y:     float64(Y) / 32,
+					Z:     float64(Z) / 32,
+					Yaw:   byte(Yaw),
+					Pitch: byte(Pitch),
+				}},
+				Type: MobType(Type),
+			}
+
+			conn.initMob(int(EntityID), mob)
 			return packet.Packet, true, nil
 		},
 		// Entity Velocity
 		0x12: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID pk.VarInt
-				X        pk.Short
-				Y        pk.Short
-				Z        pk.Short
+				X, Y, Z  pk.Short
 			)
 
 			err = packet.Scan(&EntityID, &X, &Y, &Z)
@@ -172,7 +191,7 @@ var (
 				return packet.Packet, true, nil
 			}
 
-			return pk.Marshal(0x12, EntityID, pk.Short(int16(antiKnockback.X)), pk.Short(int16(antiKnockback.Y)), pk.Short(int16(antiKnockback.Z))), true, nil
+			return pk.Marshal(0x12, EntityID, pk.Short(antiKnockback.X), pk.Short(antiKnockback.Y), pk.Short(antiKnockback.Z)), true, nil
 		},
 		// Destroy Entities
 		0x13: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
@@ -189,26 +208,19 @@ var (
 				return
 			}
 
-			return packet.Packet, true, nil
-		},
-		// Entity
-		0x14: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			var EntityID pk.VarInt
-			err = packet.Scan(&EntityID)
-			if err != nil {
-				return
+			entityIDs := make([]int, 0)
+			for _, entityID := range EntityIDs {
+				entityIDs = append(entityIDs, int(entityID))
 			}
 
-			conn.initEntity(int32(EntityID))
+			conn.destroyEntities(entityIDs)
 			return packet.Packet, true, nil
 		},
 		// Entity Relative Move
 		0x15: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID pk.VarInt
-				X        pk.Byte
-				Y        pk.Byte
-				Z        pk.Byte
+				X, Y, Z  pk.Byte
 				OnGround pk.Boolean
 			)
 
@@ -217,19 +229,16 @@ var (
 				return
 			}
 
-			conn.entityRelativeMove(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			conn.entityRelativeMove(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
 			return packet.Packet, true, nil
 		},
 		// Entity Look And Relative Move
 		0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
-				EntityID pk.VarInt
-				X        pk.Byte
-				Y        pk.Byte
-				Z        pk.Byte
-				Yaw      pk.Angle
-				Pitch    pk.Angle
-				OnGround pk.Boolean
+				EntityID   pk.VarInt
+				X, Y, Z    pk.Byte
+				Yaw, Pitch pk.Angle
+				OnGround   pk.Boolean
 			)
 
 			err = packet.Scan(&EntityID, &X, &Y, &Z, &Yaw, &Pitch, &OnGround)
@@ -237,19 +246,16 @@ var (
 				return
 			}
 
-			conn.entityRelativeMove(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			conn.entityRelativeMove(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
 			return packet.Packet, true, nil
 		},
 		// Entity Teleport
 		0x18: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
 			var (
-				EntityID pk.VarInt
-				X        pk.Int
-				Y        pk.Int
-				Z        pk.Int
-				Yaw      pk.Angle
-				Pitch    pk.Angle
-				OnGround pk.Boolean
+				EntityID   pk.VarInt
+				X, Y, Z    pk.Int
+				Yaw, Pitch pk.Angle
+				OnGround   pk.Boolean
 			)
 
 			err = packet.Scan(&EntityID, &X, &Y, &Z, &Yaw, &Pitch, &OnGround)
@@ -257,7 +263,7 @@ var (
 				return
 			}
 
-			conn.entityTeleport(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch))
+			conn.entityTeleport(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch))
 			return packet.Packet, true, nil
 		},
 		0x39: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {

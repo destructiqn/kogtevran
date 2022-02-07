@@ -19,11 +19,6 @@ const (
 	ConnStatePlay      ConnectionState = 2
 )
 
-type Entity struct {
-	Location *Location
-	isPlayer bool
-}
-
 type Location struct {
 	X, Y, Z    float64
 	Yaw, Pitch byte
@@ -49,44 +44,41 @@ type WrappedConn struct {
 	EntityID      int32
 	Location      *Location
 	IsFlying      bool
-	Entities      map[int32]*Entity
+	Entities      map[int]Entity
 	EntitiesMutex sync.Mutex
 }
 
-func (w *WrappedConn) initEntity(entityID int32) {
+func (w *WrappedConn) initPlayer(entityID int, player *Player) {
 	w.EntitiesMutex.Lock()
-	w.Entities[entityID] = &Entity{&Location{}, false}
+	w.Entities[entityID] = player
 	w.EntitiesMutex.Unlock()
 }
 
-func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64, yaw, pitch byte, isPlayer bool) {
+func (w *WrappedConn) initMob(entityID int, mob *Mob) {
 	w.EntitiesMutex.Lock()
-	w.Entities[entityID] = &Entity{
-		Location: &Location{x, y, z, yaw, pitch},
-		isPlayer: isPlayer,
-	}
+	w.Entities[entityID] = mob
 	w.EntitiesMutex.Unlock()
 }
 
-func (w *WrappedConn) entityRelativeMove(entityID int32, dx, dy, dz float64) {
+func (w *WrappedConn) entityRelativeMove(entityID int, dx, dy, dz float64) {
 	entity, ok := w.Entities[entityID]
 	if !ok {
 		return
 	}
 
-	entity.Location.X += dx
-	entity.Location.Y += dy
-	entity.Location.Z += dz
+	entity.GetLocation().X += dx
+	entity.GetLocation().Y += dy
+	entity.GetLocation().Z += dz
 }
 
-func (w *WrappedConn) entityTeleport(entityID int32, x, y, z float64, yaw, pitch byte) {
+func (w *WrappedConn) entityTeleport(entityID int, x, y, z float64, yaw, pitch byte) {
 	entity, ok := w.Entities[entityID]
 	if !ok {
 		return
 	}
 
-	entity.Location.X, entity.Location.Y, entity.Location.Z = x, y, z
-	entity.Location.Yaw, entity.Location.Pitch = yaw, pitch
+	entity.GetLocation().X, entity.GetLocation().Y, entity.GetLocation().Z = x, y, z
+	entity.GetLocation().Yaw, entity.GetLocation().Pitch = yaw, pitch
 }
 
 func (w *WrappedConn) resetEntities() {
@@ -97,7 +89,7 @@ func (w *WrappedConn) resetEntities() {
 	w.EntitiesMutex.Unlock()
 }
 
-func (w *WrappedConn) destroyEntities(entityIDs []int32) {
+func (w *WrappedConn) destroyEntities(entityIDs []int) {
 	w.EntitiesMutex.Lock()
 	for _, id := range entityIDs {
 		delete(w.Entities, id)
@@ -139,7 +131,7 @@ func WrapConn(server, client *net.Conn) *WrappedConn {
 		Server:           server,
 		Client:           client,
 		Modules:          make(map[string]Module),
-		Entities:         make(map[int32]*Entity),
+		Entities:         make(map[int]Entity),
 		Location:         &Location{},
 		EnableEncryption: make(chan []byte),
 	}
@@ -180,6 +172,6 @@ func (w *WrappedConn) SendMessage(message chat.Message, position ChatPosition) e
 	return w.WriteClient(pk.Marshal(0x02, message, pk.Byte(position)))
 }
 
-func (w *WrappedConn) Attack(target int32) error {
+func (w *WrappedConn) Attack(target int) error {
 	return w.WriteServer(pk.Marshal(0x02, pk.VarInt(target), pk.VarInt(1)))
 }
