@@ -57,8 +57,25 @@ var Commands = map[string]CommandHandler{
 			}
 
 			_ = conn.SendMessage(chat.Text(fmt.Sprintf("flight speed amplifier is set to %.0f", flight.Speed)), ChatPositionAboveHotbar)
-		}
+		case "msg":
+			spammer := conn.Modules[ModuleSpammer].(*Spammer)
+			spammer.Message = strings.Join(args[1:], " ")
 
+			_ = conn.SendMessage(chat.Text(fmt.Sprintf("spam message is set %s", spammer.Message)), ChatPositionAboveHotbar)
+		case "kb":
+			antiKnockback := conn.Modules[ModuleAntiKnockback].(*AntiKnockback)
+
+			var err error
+			antiKnockback.X, err = strconv.Atoi(args[1])
+			antiKnockback.Y, err = strconv.Atoi(args[2])
+			antiKnockback.Z, err = strconv.Atoi(args[3])
+
+			if err != nil {
+				return err
+			}
+
+			_ = conn.SendMessage(chat.Text(fmt.Sprintf("kb: x %d, y %d, z %d", antiKnockback.X, antiKnockback.Y, antiKnockback.Z)), ChatPositionAboveHotbar)
+		}
 		return nil
 	},
 
@@ -95,12 +112,12 @@ var Commands = map[string]CommandHandler{
 			return errors.New("not enough args")
 		}
 
-		speed, err := strconv.Atoi(args[0])
+		speed, err := strconv.ParseFloat(args[0], 64)
 		if err != nil {
 			return err
 		}
 
-		return conn.WriteClient(pk.Marshal(0x20, pk.VarInt(conn.EntityID), pk.Int(1), pk.String("generic.movementSpeed"), pk.Double(speed), pk.VarInt(0)))
+		return conn.WriteClient(pk.Marshal(0x20, pk.VarInt(conn.EntityID), pk.Int(1), pk.String("generic.movementSpeed"), pk.Double(0.699999988079071 * speed), pk.VarInt(0)))
 	},
 
 	"open": func(args []string, conn *WrappedConn) error {

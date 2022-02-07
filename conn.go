@@ -21,6 +21,7 @@ const (
 
 type Entity struct {
 	Location *Location
+	isPlayer bool
 }
 
 type Location struct {
@@ -54,14 +55,15 @@ type WrappedConn struct {
 
 func (w *WrappedConn) initEntity(entityID int32) {
 	w.EntitiesMutex.Lock()
-	w.Entities[entityID] = &Entity{&Location{}}
+	w.Entities[entityID] = &Entity{&Location{}, false}
 	w.EntitiesMutex.Unlock()
 }
 
-func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64, yaw, pitch byte) {
+func (w *WrappedConn) initPositionedEntity(entityID int32, x, y, z float64, isPlayer bool) {
 	w.EntitiesMutex.Lock()
 	w.Entities[entityID] = &Entity{
-		Location: &Location{x, y, z, yaw, pitch},
+		Location: &Location{x, y, z},
+		isPlayer: isPlayer,
 	}
 	w.EntitiesMutex.Unlock()
 }

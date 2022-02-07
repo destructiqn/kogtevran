@@ -7,10 +7,12 @@ import (
 )
 
 const (
-	ModuleFlight        = "flight"
-	ModuleAntiKnockback = "antiKnockback"
-	ModuleNoFall        = "noFall"
-	ModuleKillAura      = "killAura"
+	ModuleFlight        = "Flight"
+	ModuleAntiKnockback = "AntiKnockback"
+	ModuleNoFall        = "NoFall"
+	ModuleKillAura      = "KillAura"
+	ModuleSpammer		= "Spammer"
+	ModuleMobAura		= "MobAura"
 )
 
 type Module interface {
@@ -53,6 +55,8 @@ func RegisterDefaultModules(conn *WrappedConn) {
 	conn.RegisterModule(&AntiKnockback{})
 	conn.RegisterModule(&NoFall{})
 	conn.RegisterModule(&KillAura{})
+	conn.RegisterModule(&MobAura{})
+	conn.RegisterModule(&Spammer{})
 }
 
 type Flight struct {
@@ -88,6 +92,9 @@ func (f *Flight) Update() error {
 
 type AntiKnockback struct {
 	SimpleModule
+	X int
+	Y int
+	Z int
 }
 
 func (a *AntiKnockback) GetIdentifier() string {
@@ -113,7 +120,7 @@ func (k *KillAura) GetIdentifier() string {
 func (k *KillAura) Tick() error {
 	k.Conn.EntitiesMutex.Lock()
 	for id, entity := range k.Conn.Entities {
-		if entity.Location.Distance(k.Conn.Location) > 5 {
+		if entity.Location.Distance(k.Conn.Location) > 7 || !entity.isPlayer {
 			continue
 		}
 
@@ -121,6 +128,9 @@ func (k *KillAura) Tick() error {
 		if err != nil {
 			return err
 		}
+
+		// Hit animation
+		k.Conn.WriteClient(pk.Marshal(0x0B, pk.VarInt(k.Conn.EntityID), pk.UnsignedByte(0x00)))
 	}
 
 	k.Conn.EntitiesMutex.Unlock()
@@ -129,4 +139,54 @@ func (k *KillAura) Tick() error {
 
 func (k *KillAura) GetInterval() time.Duration {
 	return 50 * time.Millisecond
+}
+
+type MobAura struct {
+	SimpleModule
+}
+
+func (m *MobAura) GetIdentifier() string {
+	return ModuleMobAura
+}
+
+func (m *MobAura) Tick() error {
+	m.Conn.EntitiesMutex.Lock()
+	for id, entity := range m.Conn.Entities {
+		if entity.Location.Distance(m.Conn.Location) > 7 || entity.isPlayer {
+			continue
+		}
+
+		err := m.Conn.Attack(id)
+		if err != nil {
+			return err
+		}
+
+		// Hit animation
+		m.Conn.WriteClient(pk.Marshal(0x0B, pk.VarInt(m.Conn.EntityID), pk.UnsignedByte(0x00)))
+	}
+
+	m.Conn.EntitiesMutex.Unlock()
+	return nil
+}
+
+func (m *MobAura) GetInterval() time.Duration {
+	return 50 * time.Millisecond
+}
+
+type Spammer struct {
+	SimpleModule
+	Message string
+}
+
+func (s *Spammer) GetIdentifier() string {
+	return ModuleSpammer
+}
+
+func (s *Spammer) Tick() error {
+	processedMsg := getProcessedMsgForSpam(s.Message)
+	return s.Conn.WriteServer(pk.Marshal(0x01, pk.String(processedMsg)))
+}
+
+func (s *Spammer) GetInterval() time.Duration {
+	return 20 * time.Second
 }
