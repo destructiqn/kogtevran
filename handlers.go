@@ -116,6 +116,7 @@ var (
 				conn.Location.Z = float64(Z)
 			}
 
+			conn.Location.Yaw, conn.Location.Pitch = byte(Yaw), byte(Pitch)
 			return packet.Packet, true, nil
 		},
 		// Spawn Player
@@ -258,7 +259,7 @@ var (
 				return
 			}
 
-			conn.entityTeleport(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			conn.entityTeleport(int32(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch))
 			return packet.Packet, true, nil
 		},
 		0x39: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
@@ -377,7 +378,7 @@ var (
 				return packet.Packet, true, nil
 			}
 
-			return pk.Marshal(0x04, X, Y, Z, pk.Boolean(true)), true, nil
+			return pk.Marshal(0x04, X, Y, Z, OnGround || pk.Boolean(conn.IsModuleEnabled(ModuleNoFall))), true, nil
 		},
 		// Player Position And Look
 		0x06: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
@@ -393,6 +394,7 @@ var (
 			}
 
 			conn.Location.X, conn.Location.Y, conn.Location.Z = float64(X), float64(Y), float64(Z)
+			conn.Location.Yaw, conn.Location.Pitch = byte(Yaw), byte(Pitch)
 
 			if !conn.IsModuleEnabled(ModuleNoFall) {
 				return packet.Packet, true, nil
