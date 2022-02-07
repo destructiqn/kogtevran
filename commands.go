@@ -63,12 +63,27 @@ var Commands = map[string]CommandHandler{
 
 			_ = conn.SendMessage(chat.Text(fmt.Sprintf("spam message is set %s", spammer.Message)), ChatPositionAboveHotbar)
 		case "kb":
+			if len(args) < 4 {
+				return errors.New("not enough args")
+			}
+
 			antiKnockback := conn.Modules[ModuleAntiKnockback].(*AntiKnockback)
 
 			var err error
 			antiKnockback.X, err = strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+
 			antiKnockback.Y, err = strconv.Atoi(args[2])
+			if err != nil {
+				return err
+			}
+
 			antiKnockback.Z, err = strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
 
 			if err != nil {
 				return err
@@ -117,7 +132,7 @@ var Commands = map[string]CommandHandler{
 			return err
 		}
 
-		return conn.WriteClient(pk.Marshal(0x20, pk.VarInt(conn.EntityID), pk.Int(1), pk.String("generic.movementSpeed"), pk.Double(0.699999988079071 * speed), pk.VarInt(0)))
+		return conn.WriteClient(pk.Marshal(0x20, pk.VarInt(conn.EntityID), pk.Int(1), pk.String("generic.movementSpeed"), pk.Double(0.699999988079071*speed), pk.VarInt(0)))
 	},
 
 	"open": func(args []string, conn *WrappedConn) error {
