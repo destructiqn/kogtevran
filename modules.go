@@ -20,17 +20,32 @@ type Module interface {
 	GetIdentifier() string
 	Toggle() (bool, error)
 	IsEnabled() bool
+	Close()
 }
 
 type TickingModule interface {
 	Module
 	Tick() error
 	GetInterval() time.Duration
+	StopTicker()
+	GetInterruptChannel() chan bool
 }
 
 type DefaultModule struct {
 	Conn    *WrappedConn
 	Enabled bool
+}
+
+func (m *DefaultModule) Register(conn *WrappedConn) {
+	m.Conn = conn
+}
+
+func (m *DefaultModule) IsEnabled() bool {
+	return m.Enabled
+}
+
+func (m *DefaultModule) Close() {
+	// Do nothing by default
 }
 
 type SimpleModule struct {
@@ -42,12 +57,27 @@ func (s *SimpleModule) Toggle() (bool, error) {
 	return s.Enabled, nil
 }
 
-func (m *DefaultModule) Register(conn *WrappedConn) {
-	m.Conn = conn
+type SimpleTickingModule struct {
+	SimpleModule
+	InterruptTicker chan bool
 }
 
-func (m *DefaultModule) IsEnabled() bool {
-	return m.Enabled
+func (m *SimpleTickingModule) GetInterruptChannel() chan bool {
+	return m.InterruptTicker
+}
+
+func (m *SimpleTickingModule) Register(conn *WrappedConn) {
+	m.SimpleModule.Register(conn)
+	m.InterruptTicker = make(chan bool)
+}
+
+func (m *SimpleTickingModule) Close() {
+	m.StopTicker()
+	m.SimpleModule.Close()
+}
+
+func (m *SimpleTickingModule) StopTicker() {
+	m.InterruptTicker <- true
 }
 
 func RegisterDefaultModules(conn *WrappedConn) {
@@ -103,12 +133,12 @@ type NoFall struct {
 	SimpleModule
 }
 
-func (s *SimpleModule) GetIdentifier() string {
+func (n *NoFall) GetIdentifier() string {
 	return ModuleNoFall
 }
 
 type KillAura struct {
-	SimpleModule
+	SimpleTickingModule
 }
 
 func (k *KillAura) GetIdentifier() string {
@@ -140,7 +170,7 @@ func (k *KillAura) GetInterval() time.Duration {
 }
 
 type MobAura struct {
-	SimpleModule
+	SimpleTickingModule
 }
 
 func (m *MobAura) GetIdentifier() string {

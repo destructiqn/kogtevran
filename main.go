@@ -147,6 +147,7 @@ func pipe(conn *WrappedConn, typ int) {
 
 	if err != nil {
 		fmt.Println("error in", srcName, "->", dstName, "connection:", err)
+		conn.Close()
 	}
 
 	if lastPacket != nil {

@@ -120,7 +120,11 @@ func (w *WrappedConn) WriteServer(packet pk.Packet) error {
 	return err
 }
 
-func (w *WrappedConn) Disconnect() {
+func (w *WrappedConn) Close() {
+	for _, module := range w.Modules {
+		module.Close()
+	}
+
 	w.Closed = true
 	_ = w.Server.Close()
 	_ = w.Client.Close()
@@ -154,14 +158,18 @@ func (w *WrappedConn) RegisterModule(module Module) {
 		go func(module TickingModule) {
 			ticker := time.NewTicker(module.GetInterval())
 			for {
-				_ = <-ticker.C
-				if !module.IsEnabled() {
-					continue
-				}
+				select {
+				case <-ticker.C:
+					if !module.IsEnabled() {
+						continue
+					}
 
-				err := module.Tick()
-				if err != nil {
-					log.Println("error ticking", module.GetIdentifier(), err)
+					err := module.Tick()
+					if err != nil {
+						log.Println("error ticking", module.GetIdentifier(), err)
+					}
+				case <-tickingModule.GetInterruptChannel():
+					break
 				}
 			}
 		}(tickingModule)

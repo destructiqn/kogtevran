@@ -305,7 +305,7 @@ var (
 				return packet.Packet, false, err
 			}
 
-			conn.Disconnect()
+			conn.Close()
 			return
 		},
 	}
