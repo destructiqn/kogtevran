@@ -328,6 +328,7 @@ var (
 	}
 
 	HandlersC2S = PacketHandlerPool{
+		// Handshake
 		0x00: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			if tunnel.State != ConnStateHandshake {
 				return packet.Packet, true, nil
@@ -345,7 +346,10 @@ var (
 				return
 			}
 
-			if NextState == 2 {
+			switch NextState {
+			case 1:
+				tunnel.State = ConnStateStatus
+			case 2:
 				tunnel.State = ConnStateLogin
 			}
 

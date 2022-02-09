@@ -14,9 +14,10 @@ import (
 type ConnectionState int
 
 const (
-	ConnStateHandshake ConnectionState = 0
-	ConnStateLogin     ConnectionState = 1
-	ConnStatePlay      ConnectionState = 2
+	ConnStateHandshake ConnectionState = iota
+	ConnStateStatus
+	ConnStateLogin
+	ConnStatePlay
 )
 
 var CurrentTunnelPool = &TunnelPool{
