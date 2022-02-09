@@ -16,7 +16,7 @@ const (
 )
 
 type Module interface {
-	Register(conn *WrappedConn)
+	Register(conn *MinecraftTunnel)
 	GetIdentifier() string
 	Toggle() (bool, error)
 	IsEnabled() bool
@@ -32,11 +32,11 @@ type TickingModule interface {
 }
 
 type DefaultModule struct {
-	Conn    *WrappedConn
+	Conn    *MinecraftTunnel
 	Enabled bool
 }
 
-func (m *DefaultModule) Register(conn *WrappedConn) {
+func (m *DefaultModule) Register(conn *MinecraftTunnel) {
 	m.Conn = conn
 }
 
@@ -66,7 +66,7 @@ func (m *SimpleTickingModule) GetInterruptChannel() chan bool {
 	return m.InterruptTicker
 }
 
-func (m *SimpleTickingModule) Register(conn *WrappedConn) {
+func (m *SimpleTickingModule) Register(conn *MinecraftTunnel) {
 	m.SimpleModule.Register(conn)
 	m.InterruptTicker = make(chan bool)
 }
@@ -80,7 +80,7 @@ func (m *SimpleTickingModule) StopTicker() {
 	m.InterruptTicker <- true
 }
 
-func RegisterDefaultModules(conn *WrappedConn) {
+func RegisterDefaultModules(conn *MinecraftTunnel) {
 	conn.RegisterModule(&Flight{Speed: 1})
 	conn.RegisterModule(&AntiKnockback{})
 	conn.RegisterModule(&NoFall{})

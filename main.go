@@ -9,8 +9,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ruscalworld/vimeinterceptor/net"
@@ -18,38 +16,15 @@ import (
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
-var (
-	RemoteHost = "46.105.114.5"
-	RemotePort = 25565
-)
-
-var (
-	secretChannel = make(chan []byte)
-)
+var ServerPort = 25565
 
 func GetRemoteAddr() string {
-	return fmt.Sprintf("%s:%d", RemoteHost, RemotePort)
+	return fmt.Sprintf("%s:%d", GetConnectAddress(), ServerPort)
 }
 
 func main() {
 	go func() {
-		_ = http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			encodedKey := r.FormValue("key")
-			parts := strings.Split(encodedKey, " ")
-			key := make([]byte, 0)
-			for _, p := range parts {
-				b, err := strconv.Atoi(p)
-				if err != nil {
-					log.Println("unable to convert:", err)
-					continue
-				}
-
-				key = append(key, byte(b))
-			}
-
-			secretChannel <- key
-			w.WriteHeader(204)
-		}))
+		_ = http.ListenAndServe(":8080", http.HandlerFunc(WebsocketHandler))
 	}()
 
 	proxy, err := net.ListenMC(":25565")
@@ -64,14 +39,11 @@ func main() {
 			panic(err)
 		}
 
-		RemoteHost = GetConnectAddress()
-		log.Println("connecting to", RemoteHost)
 		server, err := net.DialMC(GetRemoteAddr())
 		if err != nil {
 			panic(err)
 		}
 
-		log.Println("starting pipes")
 		conn := WrapConn(server, &client)
 		RegisterDefaultModules(conn)
 
@@ -80,7 +52,7 @@ func main() {
 	}
 }
 
-func pipe(conn *WrappedConn, typ int) {
+func pipe(conn *MinecraftTunnel, typ int) {
 	srcName, dstName := "client", "server"
 	src, _ := conn.Client, conn.Server
 	if typ == ConnS2C {

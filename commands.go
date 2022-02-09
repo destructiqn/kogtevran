@@ -11,10 +11,10 @@ import (
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
-type CommandHandler func(args []string, conn *WrappedConn) error
+type CommandHandler func(args []string, conn *MinecraftTunnel) error
 
 var Commands = map[string]CommandHandler{
-	"toggle": func(args []string, conn *WrappedConn) error {
+	"toggle": func(args []string, conn *MinecraftTunnel) error {
 		if len(args) < 1 {
 			return errors.New("not enough args")
 		}
@@ -37,7 +37,7 @@ var Commands = map[string]CommandHandler{
 		return conn.SendMessage(chat.Text(fmt.Sprintf("%s is now %s", module.GetIdentifier(), statusText)), ChatPositionAboveHotbar)
 	},
 
-	"set": func(args []string, conn *WrappedConn) error {
+	"set": func(args []string, conn *MinecraftTunnel) error {
 		if len(args) < 2 {
 			return errors.New("not enough args")
 		}
@@ -94,7 +94,7 @@ var Commands = map[string]CommandHandler{
 		return nil
 	},
 
-	"effect": func(args []string, conn *WrappedConn) error {
+	"effect": func(args []string, conn *MinecraftTunnel) error {
 		if len(args) < 2 {
 			return errors.New("not enough args")
 		}
@@ -112,17 +112,17 @@ var Commands = map[string]CommandHandler{
 		return conn.WriteClient(pk.Marshal(0x1D, pk.VarInt(conn.EntityID), pk.Byte(id), pk.Byte(amplifier), pk.VarInt(100000), pk.Boolean(true)))
 	},
 
-	"entities": func(args []string, conn *WrappedConn) error {
+	"entities": func(args []string, conn *MinecraftTunnel) error {
 		log.Println(conn.Entities)
 		return nil
 	},
 
-	"location": func(args []string, conn *WrappedConn) error {
+	"location": func(args []string, conn *MinecraftTunnel) error {
 		log.Println(*conn.Location)
 		return nil
 	},
 
-	"speed": func(args []string, conn *WrappedConn) error {
+	"speed": func(args []string, conn *MinecraftTunnel) error {
 		if len(args) < 1 {
 			return errors.New("not enough args")
 		}
@@ -135,7 +135,7 @@ var Commands = map[string]CommandHandler{
 		return conn.WriteClient(pk.Marshal(0x20, pk.VarInt(conn.EntityID), pk.Int(1), pk.String("generic.movementSpeed"), pk.Double(0.699999988079071*speed), pk.VarInt(0)))
 	},
 
-	"open": func(args []string, conn *WrappedConn) error {
+	"open": func(args []string, conn *MinecraftTunnel) error {
 		if len(args) < 1 {
 			return errors.New("not enough args")
 		}
@@ -155,7 +155,7 @@ var Commands = map[string]CommandHandler{
 	},
 }
 
-func HandleCommand(message string, conn *WrappedConn) bool {
+func HandleCommand(message string, conn *MinecraftTunnel) bool {
 	if !strings.HasPrefix(message, "/") {
 		return false
 	}

@@ -1,37 +1,56 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"log"
+	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tnze/go-mc/chat"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 )
 
-type PacketHandler func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error)
+type PacketHandler func(packet *Packet, conn *MinecraftTunnel) (result pk.Packet, next bool, err error)
 type PacketHandlerPool map[int32]PacketHandler
 
-const (
-	CompressionThreshold = 1024
-)
+const CompressionThreshold = 1024
 
 var (
 	HandlersS2C = PacketHandlerPool{
-		0x01: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			switch conn.State {
+		// Encryption Request
+		0x01: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
+			switch tunnel.State {
 			case ConnStateLogin:
-				log.Println("accepting encryption request")
-				err = conn.WriteClient(packet.Packet)
+				err = tunnel.WriteClient(packet.Packet)
 				if err != nil {
 					next = true
 					return
 				}
 
-				key := <-conn.EnableEncryption
+				<-tunnel.AuxiliaryChannelAvailable
+				err = tunnel.AuxiliaryChannel.SendMessage(EncryptionDataRequest, nil)
+				if err != nil {
+					return
+				}
+
+				var (
+					ServerID    pk.String
+					PublicKey   pk.ByteArray
+					VerifyToken pk.ByteArray
+				)
+
+				err = packet.Scan(&ServerID, &PublicKey, &VerifyToken)
+				if err != nil {
+					return
+				}
+
+				key := <-tunnel.EnableEncryptionS2C
 				s2ce, s2cd := newSymmetricEncryption(key)
-				conn.Server.SetCipher(s2ce, s2cd) // for server -> client
+				tunnel.Server.SetCipher(s2ce, s2cd) // for server -> client
 				return
 			case ConnStatePlay:
 				var (
@@ -49,42 +68,40 @@ var (
 					return
 				}
 
-				conn.EntityID = int32(EntityID)
-				conn.resetEntities()
+				tunnel.EntityID = int32(EntityID)
+				tunnel.resetEntities()
 			}
 
 			return packet.Packet, true, nil
 		},
-		0x02: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if conn.State == ConnStateLogin {
-				conn.State = ConnStatePlay
+		0x02: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
+			if tunnel.State == ConnStateLogin {
+				tunnel.State = ConnStatePlay
 			}
 
 			return packet.Packet, true, nil
 		},
-		0x03: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			switch conn.State {
+		0x03: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
+			switch tunnel.State {
 			case ConnStateLogin:
-				if conn.State != ConnStateLogin {
+				if tunnel.State != ConnStateLogin {
 					return packet.Packet, true, nil
 				}
 
-				log.Println("handling compression")
 				var threshold pk.VarInt
 				err = packet.Scan(&threshold)
 				if err != nil {
 					return
 				}
 
-				log.Println("using s2c compression threshold", threshold)
-				conn.Server.SetThreshold(int(threshold))
+				tunnel.Server.SetThreshold(int(threshold))
 				return
 			}
 
 			return packet.Packet, true, nil
 		},
 		// Player Position And Look
-		0x08: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x08: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				X, Y, Z    pk.Double
 				Yaw, Pitch pk.Float
@@ -97,28 +114,28 @@ var (
 			}
 
 			if Flags&0x01 > 0 {
-				conn.Location.X += float64(X)
+				tunnel.Location.X += float64(X)
 			} else {
-				conn.Location.X = float64(X)
+				tunnel.Location.X = float64(X)
 			}
 
 			if Flags&0x02 > 0 {
-				conn.Location.Y += float64(Y)
+				tunnel.Location.Y += float64(Y)
 			} else {
-				conn.Location.Y = float64(Y)
+				tunnel.Location.Y = float64(Y)
 			}
 
 			if Flags&0x04 > 0 {
-				conn.Location.Z += float64(Z)
+				tunnel.Location.Z += float64(Z)
 			} else {
-				conn.Location.Z = float64(Z)
+				tunnel.Location.Z = float64(Z)
 			}
 
-			conn.Location.Yaw, conn.Location.Pitch = byte(Yaw), byte(Pitch)
+			tunnel.Location.Yaw, tunnel.Location.Pitch = byte(Yaw), byte(Pitch)
 			return packet.Packet, true, nil
 		},
 		// Spawn Player
-		0x0C: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x0C: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID    pk.VarInt
 				PlayerUUID  pk.UUID
@@ -142,10 +159,10 @@ var (
 				}},
 			}
 
-			conn.initPlayer(int(EntityID), player)
+			tunnel.initPlayer(int(EntityID), player)
 			return packet.Packet, true, nil
 		},
-		0x0F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x0F: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID                        pk.VarInt
 				Type                            pk.UnsignedByte
@@ -170,11 +187,11 @@ var (
 				Type: MobType(Type),
 			}
 
-			conn.initMob(int(EntityID), mob)
+			tunnel.initMob(int(EntityID), mob)
 			return packet.Packet, true, nil
 		},
 		// Entity Velocity
-		0x12: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x12: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID pk.VarInt
 				X, Y, Z  pk.Short
@@ -185,16 +202,16 @@ var (
 				return
 			}
 
-			antiKnockback := conn.Modules[ModuleAntiKnockback].(*AntiKnockback)
+			antiKnockback := tunnel.Modules[ModuleAntiKnockback].(*AntiKnockback)
 
-			if !conn.IsModuleEnabled(ModuleAntiKnockback) || int32(EntityID) != conn.EntityID {
+			if !tunnel.IsModuleEnabled(ModuleAntiKnockback) || int32(EntityID) != tunnel.EntityID {
 				return packet.Packet, true, nil
 			}
 
 			return pk.Marshal(0x12, EntityID, pk.Short(antiKnockback.X), pk.Short(antiKnockback.Y), pk.Short(antiKnockback.Z)), true, nil
 		},
 		// Destroy Entities
-		0x13: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x13: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				Count     pk.VarInt
 				EntityIDs []pk.VarInt
@@ -213,11 +230,11 @@ var (
 				entityIDs = append(entityIDs, int(entityID))
 			}
 
-			conn.destroyEntities(entityIDs)
+			tunnel.destroyEntities(entityIDs)
 			return packet.Packet, true, nil
 		},
 		// Entity Relative Move
-		0x15: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x15: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID pk.VarInt
 				X, Y, Z  pk.Byte
@@ -229,11 +246,11 @@ var (
 				return
 			}
 
-			conn.entityRelativeMove(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			tunnel.entityRelativeMove(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
 			return packet.Packet, true, nil
 		},
 		// Entity Look And Relative Move
-		0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x17: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID   pk.VarInt
 				X, Y, Z    pk.Byte
@@ -246,11 +263,11 @@ var (
 				return
 			}
 
-			conn.entityRelativeMove(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
+			tunnel.entityRelativeMove(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32)
 			return packet.Packet, true, nil
 		},
 		// Entity Teleport
-		0x18: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x18: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				EntityID   pk.VarInt
 				X, Y, Z    pk.Int
@@ -263,10 +280,10 @@ var (
 				return
 			}
 
-			conn.entityTeleport(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch))
+			tunnel.entityTeleport(int(EntityID), float64(X)/32, float64(Y)/32, float64(Z)/32, byte(Yaw), byte(Pitch))
 			return packet.Packet, true, nil
 		},
-		0x39: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x39: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				Flags               pk.Byte
 				FlyingSpeed         pk.Float
@@ -278,21 +295,21 @@ var (
 				return
 			}
 
-			if conn.IsModuleEnabled(ModuleFlight) {
-				go func(conn *WrappedConn) {
+			if tunnel.IsModuleEnabled(ModuleFlight) {
+				go func(conn *MinecraftTunnel) {
 					time.Sleep(100 * time.Millisecond)
 					flight := conn.Modules[ModuleFlight].(*Flight)
 					err = flight.Update()
-				}(conn)
+				}(tunnel)
 			}
 
 			return packet.Packet, true, err
 		},
-		//0x3F: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		//0x3F: func(packet *Packet, conn *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 		//	err = HandlePluginMessage(packet.Packet, "server")
 		//	return packet.Packet, true, err
 		//},
-		0x40: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x40: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var Reason chat.Message
 			err = packet.Scan(&Reason)
 			if err != nil {
@@ -300,48 +317,108 @@ var (
 			}
 
 			log.Println("disconnected from server:", Reason.String())
-			err = conn.WriteClient(packet.Packet)
+			err = tunnel.WriteClient(packet.Packet)
 			if err != nil {
 				return packet.Packet, false, err
 			}
 
-			conn.Close()
+			tunnel.Close()
 			return
 		},
 	}
 
 	HandlersC2S = PacketHandlerPool{
-		0x00: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if conn.State != ConnStateHandshake {
+		0x00: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
+			if tunnel.State != ConnStateHandshake {
 				return packet.Packet, true, nil
 			}
-			log.Println("handling handshake")
-			conn.State = ConnStateLogin
-			return pk.Marshal(0x00, pk.VarInt(47), pk.String(fmt.Sprintf("%s ", RemoteHost)), pk.UnsignedShort(RemotePort), pk.VarInt(2)), true, nil
-		},
-		0x01: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
-			if conn.State == ConnStateLogin {
-				log.Println("accepting encryption response")
-				key := <-secretChannel
-				log.Println("accepted shared secret:", key)
 
-				err = conn.WriteServer(packet.Packet)
+			var (
+				ProtocolVersion pk.VarInt
+				ServerAddress   pk.String
+				ServerPort      pk.UnsignedShort
+				NextState       pk.VarInt
+			)
+
+			err = packet.Scan(&ProtocolVersion, &ServerAddress, &ServerPort, &NextState)
+			if err != nil {
+				return
+			}
+
+			if NextState == 2 {
+				tunnel.State = ConnStateLogin
+			}
+
+			sessionID := strings.Split(string(ServerAddress), ".")[0]
+			CurrentTunnelPool.RegisterTunnel(sessionID, tunnel)
+
+			host, sPort, err := net.SplitHostPort(tunnel.Server.Socket.RemoteAddr().String())
+			if err != nil {
+				return
+			}
+
+			port, err := strconv.Atoi(sPort)
+			if err != nil {
+				return
+			}
+
+			return pk.Marshal(0x00,
+				pk.VarInt(47),
+				pk.String(fmt.Sprintf("%s ", host)),
+				pk.UnsignedShort(port),
+				NextState,
+			), true, nil
+		},
+		// Encryption Response
+		0x01: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
+			if tunnel.State == ConnStateLogin {
+				candidates := <-tunnel.EnableEncryptionC2S
+
+				var (
+					SharedSecret pk.ByteArray
+					VerifyToken  pk.ByteArray
+				)
+
+				err = packet.Scan(&SharedSecret, &VerifyToken)
+				if err != nil {
+					return
+				}
+
+				var key []byte
+				found := false
+
+				for _, candidate := range candidates {
+					_, decrypt := newSymmetricEncryption(candidate)
+					verifyToken := make([]byte, len(tunnel.VerifyToken))
+					decrypt.XORKeyStream(verifyToken, tunnel.VerifyToken)
+
+					if bytes.Compare(verifyToken, tunnel.VerifyToken) == 0 {
+						key = candidate
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					tunnel.Disconnect(chat.Text("decryption failure"))
+					return
+				}
+
+				err = tunnel.WriteServer(packet.Packet)
 				if err != nil {
 					return packet.Packet, true, err
 				}
 
 				c2se, c2sd := newSymmetricEncryption(key)
-				conn.Client.SetCipher(c2se, c2sd) // for client -> server
-				log.Println("enabled c2s encryption")
-				conn.EnableEncryption <- key
+				tunnel.Client.SetCipher(c2se, c2sd) // for client -> server
+				tunnel.EnableEncryptionS2C <- key
 
-				err = conn.WriteClient(pk.Marshal(0x03, pk.VarInt(CompressionThreshold)))
+				err = tunnel.WriteClient(pk.Marshal(0x03, pk.VarInt(CompressionThreshold)))
 				if err != nil {
 					return
 				}
 
-				log.Println("using c2s compression threshold", CompressionThreshold)
-				conn.Client.SetThreshold(CompressionThreshold)
+				tunnel.Client.SetThreshold(CompressionThreshold)
 				return
 			}
 
@@ -352,10 +429,10 @@ var (
 				return
 			}
 
-			handled := HandleCommand(string(Message), conn)
+			handled := HandleCommand(string(Message), tunnel)
 			return packet.Packet, !handled, nil
 		},
-		0x03: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x03: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var OnGround pk.Boolean
 
 			err = packet.Scan(&OnGround)
@@ -363,9 +440,9 @@ var (
 				return
 			}
 
-			return pk.Marshal(0x03, OnGround || pk.Boolean(conn.IsModuleEnabled(ModuleNoFall))), true, nil
+			return pk.Marshal(0x03, OnGround || pk.Boolean(tunnel.IsModuleEnabled(ModuleNoFall))), true, nil
 		},
-		0x04: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x04: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				X, Y, Z  pk.Double
 				OnGround pk.Boolean
@@ -376,16 +453,16 @@ var (
 				return
 			}
 
-			conn.Location.X, conn.Location.Y, conn.Location.Z = float64(X), float64(Y), float64(Z)
+			tunnel.Location.X, tunnel.Location.Y, tunnel.Location.Z = float64(X), float64(Y), float64(Z)
 
-			if !conn.IsModuleEnabled(ModuleNoFall) {
+			if !tunnel.IsModuleEnabled(ModuleNoFall) {
 				return packet.Packet, true, nil
 			}
 
-			return pk.Marshal(0x04, X, Y, Z, OnGround || pk.Boolean(conn.IsModuleEnabled(ModuleNoFall))), true, nil
+			return pk.Marshal(0x04, X, Y, Z, OnGround || pk.Boolean(tunnel.IsModuleEnabled(ModuleNoFall))), true, nil
 		},
 		// Player Position And Look
-		0x06: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x06: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var (
 				X, Y, Z    pk.Double
 				Yaw, Pitch pk.Float
@@ -397,26 +474,26 @@ var (
 				return
 			}
 
-			conn.Location.X, conn.Location.Y, conn.Location.Z = float64(X), float64(Y), float64(Z)
-			conn.Location.Yaw, conn.Location.Pitch = byte(Yaw), byte(Pitch)
+			tunnel.Location.X, tunnel.Location.Y, tunnel.Location.Z = float64(X), float64(Y), float64(Z)
+			tunnel.Location.Yaw, tunnel.Location.Pitch = byte(Yaw), byte(Pitch)
 
-			if !conn.IsModuleEnabled(ModuleNoFall) {
+			if !tunnel.IsModuleEnabled(ModuleNoFall) {
 				return packet.Packet, true, nil
 			}
 
 			return pk.Marshal(0x06, X, Y, Z, Yaw, Pitch, pk.Boolean(true)), true, nil
 		},
-		0x13: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		0x13: func(packet *Packet, tunnel *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 			var Flags pk.Byte
 			err = packet.Scan(&Flags)
 			if err != nil {
 				return
 			}
 
-			conn.IsFlying = Flags&0x02 > 0
+			tunnel.IsFlying = Flags&0x02 > 0
 			return packet.Packet, true, nil
 		},
-		//0x17: func(packet *Packet, conn *WrappedConn) (result pk.Packet, next bool, err error) {
+		//0x17: func(packet *Packet, conn *MinecraftTunnel) (result pk.Packet, next bool, err error) {
 		//	err = HandlePluginMessage(packet.Packet, "client")
 		//	return packet.Packet, true, err
 		//},
