@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/ruscalworld/vimeinterceptor/minecraft"
 	"log"
-	"math"
 	"sync"
 	"time"
 
@@ -55,16 +55,6 @@ func (p *TunnelPool) GetTunnel(sessionID string) (*MinecraftTunnel, bool) {
 	return tunnel, ok
 }
 
-type Location struct {
-	X, Y, Z    float64
-	Yaw, Pitch byte
-}
-
-func (l *Location) Distance(another *Location) float64 {
-	dx, dy, dz := another.X-l.X, another.Y-l.Y, another.Z-l.Z
-	return math.Sqrt(dx*dx + dy*dy + dz*dz)
-}
-
 type MinecraftTunnel struct {
 	SessionID                 string
 	AuxiliaryChannel          *AuxiliaryChannel
@@ -86,19 +76,19 @@ type MinecraftTunnel struct {
 	EnableEncryptionC2S    chan [][]byte
 
 	EntityID      int32
-	Location      *Location
+	Location      *minecraft.Location
 	IsFlying      bool
-	Entities      map[int]Entity
+	Entities      map[int]minecraft.Entity
 	EntitiesMutex sync.Mutex
 }
 
-func (t *MinecraftTunnel) initPlayer(entityID int, player *Player) {
+func (t *MinecraftTunnel) initPlayer(entityID int, player *minecraft.Player) {
 	t.EntitiesMutex.Lock()
 	t.Entities[entityID] = player
 	t.EntitiesMutex.Unlock()
 }
 
-func (t *MinecraftTunnel) initMob(entityID int, mob *Mob) {
+func (t *MinecraftTunnel) initMob(entityID int, mob *minecraft.Mob) {
 	t.EntitiesMutex.Lock()
 	t.Entities[entityID] = mob
 	t.EntitiesMutex.Unlock()
@@ -185,8 +175,8 @@ func WrapConn(server, client *net.Conn) *MinecraftTunnel {
 		Server:                    server,
 		Client:                    client,
 		Modules:                   make(map[string]Module),
-		Entities:                  make(map[int]Entity),
-		Location:                  &Location{},
+		Entities:                  make(map[int]minecraft.Entity),
+		Location:                  &minecraft.Location{},
 		AuxiliaryChannelAvailable: make(chan bool),
 		EnableEncryptionS2C:       make(chan []byte),
 		EnableEncryptionC2S:       make(chan [][]byte),

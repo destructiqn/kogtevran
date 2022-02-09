@@ -14,6 +14,7 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/net"
 	"github.com/ruscalworld/vimeinterceptor/net/CFB8"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
+	"github.com/ruscalworld/vimeinterceptor/protocol"
 )
 
 var ServerPort = 25565
@@ -82,18 +83,25 @@ func pipe(conn *MinecraftTunnel, typ int) {
 		}
 
 		wrappedPacket := WrapPacket(packet, typ)
-		handlerPool := HandlersS2C
+		stateHandlerPool := ClientboundHandlers
 		if typ == ConnC2S {
-			handlerPool = HandlersC2S
+			stateHandlerPool = ServerboundHandlers
 		}
 
 		next := true
-		if handler, ok := handlerPool[packet.ID]; ok {
-			packet, next, err = handler(wrappedPacket, conn)
-			if err != nil {
-				log.Println(direction, "error handling packet", FormatPacket(packet.ID, typ), err)
-				next = true
-				continue
+		if stateHandler, ok := stateHandlerPool[conn.State]; ok {
+			if handler, ok := stateHandler[packet.ID]; ok {
+				hPacket, hNext, err := handler(wrappedPacket, conn)
+				next = hNext
+				if err != nil {
+					log.Println(direction, "error handling packet", FormatPacket(packet.ID, typ), err)
+					next = true
+					continue
+				}
+
+				if len(hPacket.Data) > 0 {
+					packet = hPacket
+				}
 			}
 		}
 
@@ -112,7 +120,7 @@ func pipe(conn *MinecraftTunnel, typ int) {
 			packets++
 		}
 
-		if packet.ID != 0x40 {
+		if packet.ID != protocol.ClientboundDisconnect {
 			lastPacket = &packet
 		}
 	}

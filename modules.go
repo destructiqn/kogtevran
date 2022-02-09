@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ruscalworld/vimeinterceptor/minecraft"
 	"time"
 
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
@@ -148,7 +149,7 @@ func (k *KillAura) GetIdentifier() string {
 func (k *KillAura) Tick() error {
 	k.Conn.EntitiesMutex.Lock()
 	for id, entity := range k.Conn.Entities {
-		if _, isPlayer := entity.(*Player); !isPlayer || entity.GetLocation().Distance(k.Conn.Location) > 7 {
+		if _, isPlayer := entity.(*minecraft.Player); !isPlayer || entity.GetLocation().Distance(k.Conn.Location) > 7 {
 			continue
 		}
 
@@ -180,7 +181,7 @@ func (m *MobAura) GetIdentifier() string {
 func (m *MobAura) Tick() error {
 	m.Conn.EntitiesMutex.Lock()
 	for id, entity := range m.Conn.Entities {
-		if _, isPlayer := entity.(*Player); isPlayer || entity.GetLocation().Distance(m.Conn.Location) > 7 {
+		if _, isPlayer := entity.(*minecraft.Player); isPlayer || entity.GetLocation().Distance(m.Conn.Location) > 7 {
 			continue
 		}
 
