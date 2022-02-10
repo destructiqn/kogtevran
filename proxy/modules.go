@@ -41,7 +41,7 @@ func (t *ModuleHandler) RegisterModule(module generic.Module) {
 						log.Println("error ticking", module.GetIdentifier(), err)
 					}
 				case <-tickingModule.GetInterruptChannel():
-					break
+					return
 				}
 			}
 		}(tickingModule)
