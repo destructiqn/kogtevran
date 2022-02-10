@@ -15,6 +15,7 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/net/CFB8"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"github.com/ruscalworld/vimeinterceptor/proxy"
 )
 
 var ServerPort = 25565
@@ -25,17 +26,17 @@ func GetRemoteAddr() string {
 
 func main() {
 	go func() {
-		_ = http.ListenAndServe(":8080", http.HandlerFunc(WebsocketHandler))
+		_ = http.ListenAndServe(":8080", http.HandlerFunc(proxy.WebsocketHandler))
 	}()
 
-	proxy, err := net.ListenMC(":25565")
+	proxyServer, err := net.ListenMC(":25565")
 	if err != nil {
 		panic(err)
 	}
 
 	log.Println("server is now listening for connections")
 	for {
-		client, err := proxy.Accept()
+		client, err := proxyServer.Accept()
 		if err != nil {
 			panic(err)
 		}
@@ -45,15 +46,15 @@ func main() {
 			panic(err)
 		}
 
-		conn := WrapConn(server, &client)
-		RegisterDefaultModules(conn)
+		conn := proxy.WrapConn(server, &client)
+		proxy.RegisterDefaultModules(conn)
 
 		go pipe(conn, ConnS2C)
 		go pipe(conn, ConnC2S)
 	}
 }
 
-func pipe(conn *MinecraftTunnel, typ int) {
+func pipe(conn *proxy.MinecraftTunnel, typ int) {
 	srcName, dstName := "client", "server"
 	src, _ := conn.Client, conn.Server
 	if typ == ConnS2C {
