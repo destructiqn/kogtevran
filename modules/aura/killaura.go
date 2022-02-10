@@ -1,8 +1,6 @@
 package aura
 
 import (
-	"time"
-
 	"github.com/ruscalworld/vimeinterceptor/minecraft"
 	"github.com/ruscalworld/vimeinterceptor/modules"
 )
@@ -18,8 +16,4 @@ func (k *KillAura) GetIdentifier() string {
 func (k *KillAura) Filter(entity minecraft.Entity) bool {
 	_, ok := entity.(*minecraft.Player)
 	return ok
-}
-
-func (k *KillAura) GetInterval() time.Duration {
-	return 50 * time.Millisecond
 }

@@ -1,6 +1,8 @@
 package modules
 
 import (
+	"time"
+
 	"github.com/ruscalworld/vimeinterceptor/generic"
 )
 
@@ -46,7 +48,12 @@ func (s *SimpleModule) Toggle() (bool, error) {
 
 type SimpleTickingModule struct {
 	SimpleModule
+	Interval        time.Duration `option:"interval"`
 	InterruptTicker chan bool
+}
+
+func (m *SimpleTickingModule) GetInterval() time.Duration {
+	return m.Interval
 }
 
 func (m *SimpleTickingModule) GetInterruptChannel() chan bool {

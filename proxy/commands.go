@@ -3,13 +3,14 @@ package proxy
 import (
 	"errors"
 	"fmt"
-	"github.com/ruscalworld/vimeinterceptor/modules"
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tnze/go-mc/chat"
 	"github.com/ruscalworld/vimeinterceptor/generic"
+	"github.com/ruscalworld/vimeinterceptor/modules"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"github.com/ruscalworld/vimeinterceptor/protocol"
 )
@@ -67,6 +68,8 @@ var Commands = map[string]CommandHandler{
 			newValue = args[2] == "true" || args[2] == "1"
 		case float64:
 			newValue, err = strconv.ParseFloat(args[2], 64)
+		case time.Duration:
+			newValue, err = time.ParseDuration(args[2])
 		default:
 			newValue, err = strconv.Atoi(args[2])
 		}

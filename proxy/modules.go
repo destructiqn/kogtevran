@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ruscalworld/vimeinterceptor/generic"
+	"github.com/ruscalworld/vimeinterceptor/modules"
 	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
 	"github.com/ruscalworld/vimeinterceptor/modules/aura"
 	"github.com/ruscalworld/vimeinterceptor/modules/flight"
@@ -28,10 +29,9 @@ func (t *ModuleHandler) RegisterModule(module generic.Module) {
 	tickingModule, isTicking := module.(generic.TickingModule)
 	if isTicking {
 		go func(module generic.TickingModule) {
-			ticker := time.NewTicker(module.GetInterval())
 			for {
 				select {
-				case <-ticker.C:
+				case <-time.NewTimer(tickingModule.GetInterval()).C:
 					if !module.IsEnabled() {
 						continue
 					}
@@ -49,11 +49,11 @@ func (t *ModuleHandler) RegisterModule(module generic.Module) {
 }
 
 func (t *ModuleHandler) GetModules() []generic.Module {
-	modules := make([]generic.Module, 0)
+	aModules := make([]generic.Module, 0)
 	for _, module := range t.modules {
-		modules = append(modules, module)
+		aModules = append(aModules, module)
 	}
-	return modules
+	return aModules
 }
 
 func (t *ModuleHandler) GetModule(identifier string) (generic.Module, bool) {
@@ -72,12 +72,16 @@ func (t *ModuleHandler) IsModuleEnabled(moduleID string) bool {
 
 func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler := tunnel.GetModuleHandler()
-	genericAura := aura.GenericAura{MaxDistance: 7, HitAnimation: true}
+
+	genericAura := aura.GenericAura{
+		MaxDistance: 7, HitAnimation: true,
+		SimpleTickingModule: modules.SimpleTickingModule{Interval: 50 * time.Millisecond},
+	}
 
 	moduleHandler.RegisterModule(&flight.Flight{Speed: 1})
 	moduleHandler.RegisterModule(&antiknockback.AntiKnockback{})
 	moduleHandler.RegisterModule(&nofall.NoFall{})
 	moduleHandler.RegisterModule(&aura.KillAura{GenericAura: genericAura})
 	moduleHandler.RegisterModule(&aura.MobAura{GenericAura: genericAura})
-	moduleHandler.RegisterModule(&spammer.Spammer{})
+	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
 }
