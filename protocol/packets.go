@@ -1,4 +1,4 @@
-package main
+package protocol
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ const (
 	ConnC2S = 2
 )
 
-type Packet struct {
+type PacketDescription struct {
 	Name string
 	pk.Packet
 }
 
-type PacketMap map[int]Packet
+type PacketMap map[int]PacketDescription
 
 var (
 	PlayPacketsS2C = PacketMap{
@@ -138,14 +138,14 @@ func GetPacketMap(connType int) PacketMap {
 	panic("unsupported direction")
 }
 
-func GetPacket(packetID, connType int) (packet Packet, ok bool) {
+func GetPacketDescription(packetID, connType int) (packet PacketDescription, ok bool) {
 	packet, ok = GetPacketMap(connType)[packetID]
 	return
 }
 
 func GetPacketName(id int32, connType int) string {
 	nameDisplay := "Unsupported Packet"
-	packet, ok := GetPacket(int(id), connType)
+	packet, ok := GetPacketDescription(int(id), connType)
 	if ok {
 		nameDisplay = packet.Name
 	}
@@ -156,8 +156,8 @@ func FormatPacket(id int32, connType int) string {
 	return fmt.Sprintf("%s %s", strconv.FormatInt(int64(id), 16), GetPacketName(id, connType))
 }
 
-func WrapPacket(packet pk.Packet, connType int) *Packet {
-	return &Packet{
+func WrapPacket(packet pk.Packet, connType int) *PacketDescription {
+	return &PacketDescription{
 		Name:   GetPacketName(packet.ID, connType),
 		Packet: packet,
 	}

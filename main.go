@@ -49,15 +49,15 @@ func main() {
 		conn := proxy.WrapConn(server, &client)
 		proxy.RegisterDefaultModules(conn)
 
-		go pipe(conn, ConnS2C)
-		go pipe(conn, ConnC2S)
+		go pipe(conn, protocol.ConnS2C)
+		go pipe(conn, protocol.ConnC2S)
 	}
 }
 
 func pipe(conn *proxy.MinecraftTunnel, typ int) {
 	srcName, dstName := "client", "server"
 	src, _ := conn.Client, conn.Server
-	if typ == ConnS2C {
+	if typ == protocol.ConnS2C {
 		srcName, dstName = dstName, srcName
 		src, _ = conn.Server, conn.Client
 	}
@@ -83,9 +83,9 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 			break
 		}
 
-		wrappedPacket := WrapPacket(packet, typ)
+		wrappedPacket := protocol.WrapPacket(packet, typ)
 		stateHandlerPool := ClientboundHandlers
-		if typ == ConnC2S {
+		if typ == protocol.ConnC2S {
 			stateHandlerPool = ServerboundHandlers
 		}
 
@@ -95,7 +95,7 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 				hPacket, hNext, err := handler(wrappedPacket, conn)
 				next = hNext
 				if err != nil {
-					log.Println(direction, "error handling packet", FormatPacket(packet.ID, typ), err)
+					log.Println(direction, "error handling packet", protocol.FormatPacket(packet.ID, typ), err)
 					next = true
 					continue
 				}
@@ -108,7 +108,7 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 
 		if next {
 			write := conn.WriteClient
-			if typ == ConnC2S {
+			if typ == protocol.ConnC2S {
 				write = conn.WriteServer
 			}
 
@@ -133,7 +133,7 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 
 	if lastPacket != nil {
 		fmt.Println("total packets handled:", packets)
-		fmt.Println("last packet was", FormatPacket(lastPacket.ID, typ), "")
+		fmt.Println("last packet was", protocol.FormatPacket(lastPacket.ID, typ), "")
 		fmt.Println(fmt.Sprintf("last packet dump:\n%s", hex.Dump(lastPacket.Data)))
 	}
 }
