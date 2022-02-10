@@ -11,8 +11,8 @@ type Predicate func(mob minecraft.Entity) bool
 
 type GenericAura struct {
 	modules.SimpleTickingModule
-	MaxDistance  float64
-	HitAnimation bool
+	MaxDistance  float64 `option:"maxDistance"`
+	HitAnimation bool    `option:"hitAnimation"`
 }
 
 func (a *GenericAura) Tick() error {

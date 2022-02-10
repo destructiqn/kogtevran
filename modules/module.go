@@ -26,6 +26,11 @@ func (m *DefaultModule) IsEnabled() bool {
 	return m.Enabled
 }
 
+func (m *DefaultModule) Update() error {
+	// Do nothing by default
+	return nil
+}
+
 func (m *DefaultModule) Close() {
 	// Do nothing by default
 }

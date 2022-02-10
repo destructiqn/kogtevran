@@ -11,7 +11,7 @@ import (
 
 type Flight struct {
 	modules.DefaultModule
-	Speed float64
+	Speed float64 `option:"speed"`
 }
 
 func (f *Flight) GetIdentifier() string {

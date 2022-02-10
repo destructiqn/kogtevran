@@ -3,6 +3,7 @@ package proxy
 import (
 	"errors"
 	"fmt"
+	"github.com/ruscalworld/vimeinterceptor/modules"
 	"log"
 	"strconv"
 	"strings"
@@ -37,6 +38,56 @@ var Commands = map[string]CommandHandler{
 		}
 
 		return tunnel.GetChatHandler().SendMessage(chat.Text(fmt.Sprintf("%s is now %s", module.GetIdentifier(), statusText)), protocol.ChatPositionAboveHotbar)
+	},
+
+	"set": func(args []string, tunnel generic.Tunnel) error {
+		if len(args) < 1 {
+			return errors.New("not enough args")
+		}
+
+		module, ok := tunnel.GetModuleHandler().GetModule(args[0])
+		if !ok {
+			return errors.New("unknown module")
+		}
+
+		value, ok := modules.GetOptionValue(module, args[1])
+		if !ok {
+			return errors.New("unknown option")
+		}
+
+		var (
+			newValue interface{}
+			err      error
+		)
+
+		switch value.(type) {
+		case string:
+			newValue = strings.Join(args[2:], " ")
+		case bool:
+			newValue = args[2] == "true" || args[2] == "1"
+		case float64:
+			newValue, err = strconv.ParseFloat(args[2], 64)
+		default:
+			newValue, err = strconv.Atoi(args[2])
+		}
+
+		if err != nil {
+			return err
+		}
+
+		ok = modules.SetOptionValue(module, args[1], newValue)
+		if !ok {
+			return errors.New("unable to change value")
+		}
+
+		err = module.Update()
+		if err != nil {
+			return err
+		}
+
+		return tunnel.GetChatHandler().SendMessage(
+			chat.Text(fmt.Sprintf("set %s of %s to %v", args[1], module.GetIdentifier(), newValue)), protocol.ChatPositionAboveHotbar,
+		)
 	},
 
 	"effect": func(args []string, tunnel generic.Tunnel) error {
