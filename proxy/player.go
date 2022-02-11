@@ -45,8 +45,7 @@ func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 	joinGame := packet.(*protocol.JoinGame)
 	tunnel.GetPlayerHandler().(*PlayerHandler).entityID = int32(joinGame.EntityID)
 	tunnel.GetEntityHandler().(*EntityHandler).ResetEntities()
-	err = tunnel.GetModuleHandler().(*ModuleHandler).UpdateModuleList()
-	return packet.Marshal(), true, err
+	return packet.Marshal(), true, nil
 }
 
 func HandlePlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {

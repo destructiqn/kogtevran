@@ -28,17 +28,8 @@ var Commands = map[string]CommandHandler{
 			return errors.New("unknown module")
 		}
 
-		status, err := tunnel.GetModuleHandler().ToggleModule(module)
-		if err != nil {
-			return err
-		}
-
-		statusText := "enabled"
-		if !status {
-			statusText = "disabled"
-		}
-
-		return tunnel.GetChatHandler().SendMessage(chat.Text(fmt.Sprintf("%s is now %s", module.GetIdentifier(), statusText)), protocol.ChatPositionAboveHotbar)
+		_, err := tunnel.GetModuleHandler().ToggleModule(module)
+		return err
 	},
 
 	"set": func(args []string, tunnel generic.Tunnel) error {

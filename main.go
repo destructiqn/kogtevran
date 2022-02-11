@@ -55,6 +55,13 @@ func main() {
 }
 
 func pipe(conn *proxy.MinecraftTunnel, typ int) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
 	srcName, dstName := "client", "server"
 	src, _ := conn.Client, conn.Server
 	if typ == protocol.ConnS2C {

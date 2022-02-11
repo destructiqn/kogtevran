@@ -17,7 +17,7 @@ func ReadMap(src []byte) (map[string]interface{}, error) {
 		var key String
 		_, err := key.ReadFrom(reader)
 		if err != nil {
-			if err == io.EOF {
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				return m, nil
 			}
 

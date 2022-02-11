@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -89,38 +90,82 @@ func (t *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
 	return value, nil
 }
 
-func (t *ModuleHandler) UpdateModuleList() error {
+func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 	modulesDisplay := make([]string, 0)
+	modulesControls := make([]map[string]interface{}, 0)
+
+	x, y := 10, 20
 	for _, module := range t.GetModules() {
-		if !module.IsEnabled() {
-			continue
+		control := map[string]interface{}{
+			"id":    fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
+			"type":  "Button",
+			"pos":   "BOTTOM_RIGHT",
+			"w":     85,
+			"h":     20,
+			"t":     module.GetIdentifier(),
+			"tc":    0xFFFFFF,
+			"x":     x,
+			"y":     y,
+			"color": -0x22BBBB,
+			"click": map[string]interface{}{
+				"act":  "CHAT",
+				"data": fmt.Sprintf("/toggle %s", module.GetIdentifier()),
+			},
 		}
 
-		modulesDisplay = append(modulesDisplay, module.GetIdentifier())
+		x += 90
+		if x > 300 {
+			y += 25
+			x = 10
+		}
+
+		modulesControls = append(modulesControls, control)
+
+		if module.IsEnabled() {
+			modulesDisplay = append(modulesDisplay, module.GetIdentifier())
+			control["color"] = -0xBB22BB
+		}
 	}
 
-	return t.tunnel.GetTexteriaHandler().SendClient(map[string]interface{}{
-		"%":    "add",
-		"id":   "kv.ml",
-		"al":   "RIGHT",
-		"pos":  "TOP_RIGHT",
-		"type": "Text",
-		"text": modulesDisplay,
+	return []map[string]interface{}{
+		{
+			"%":    "add",
+			"id":   "kv.ml",
+			"al":   "RIGHT",
+			"pos":  "TOP_RIGHT",
+			"type": "Text",
+			"text": modulesDisplay,
 
-		"vis": []map[string]interface{}{
-			{
-				"type": "always",
-				"show": true,
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
 			},
-			{
-				"type": "f3",
-				"show": false,
+
+			"x": 2,
+			"y": 2,
+		},
+		{
+			"%": "add:group",
+			"e": modulesControls,
+			"vis": []map[string]interface{}{
+				{
+					"type": "chat",
+					"show": true,
+				},
 			},
 		},
+	}
+}
 
-		"x": 2,
-		"y": 2,
-	})
+func (t *ModuleHandler) UpdateModuleList() error {
+	details := t.GetModulesDetails()
+	return t.tunnel.TexteriaHandler.SendClient(details)
 }
 
 func RegisterDefaultModules(tunnel generic.Tunnel) {
