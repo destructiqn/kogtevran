@@ -69,7 +69,7 @@ func (t *TexteriaHandler) SendClient(data map[string]interface{}) error {
 		return err
 	}
 
-	packet := pk.Marshal(protocol.ClientboundPluginMessage, pk.VarInt(1), pk.ByteArray(byteMap))
+	packet := pk.Marshal(protocol.ClientboundPluginMessage, pk.String("Texteria"), pk.VarInt(1), pk.ByteArray(byteMap))
 	return t.tunnel.WriteClient(packet)
 }
 

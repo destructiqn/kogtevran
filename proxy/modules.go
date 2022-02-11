@@ -70,6 +70,59 @@ func (t *ModuleHandler) IsModuleEnabled(moduleID string) bool {
 	return module.IsEnabled()
 }
 
+func (t *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
+	value, err := module.Toggle()
+	if err != nil {
+		return value, err
+	}
+
+	err = t.UpdateModuleList()
+	if err != nil {
+		return value, err
+	}
+
+	err = module.Update()
+	if err != nil {
+		return value, err
+	}
+
+	return value, nil
+}
+
+func (t *ModuleHandler) UpdateModuleList() error {
+	modulesDisplay := make([]string, 0)
+	for _, module := range t.GetModules() {
+		if !module.IsEnabled() {
+			continue
+		}
+
+		modulesDisplay = append(modulesDisplay, module.GetIdentifier())
+	}
+
+	return t.tunnel.GetTexteriaHandler().SendClient(map[string]interface{}{
+		"%":    "add",
+		"id":   "kv.ml",
+		"al":   "RIGHT",
+		"pos":  "TOP_RIGHT",
+		"type": "Text",
+		"text": modulesDisplay,
+
+		"vis": []map[string]interface{}{
+			{
+				"type": "always",
+				"show": true,
+			},
+			{
+				"type": "f3",
+				"show": false,
+			},
+		},
+
+		"x": 2,
+		"y": 2,
+	})
+}
+
 func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler := tunnel.GetModuleHandler()
 

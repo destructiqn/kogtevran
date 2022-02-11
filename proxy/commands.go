@@ -28,7 +28,7 @@ var Commands = map[string]CommandHandler{
 			return errors.New("unknown module")
 		}
 
-		status, err := module.Toggle()
+		status, err := tunnel.GetModuleHandler().ToggleModule(module)
 		if err != nil {
 			return err
 		}

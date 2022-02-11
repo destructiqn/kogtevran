@@ -24,4 +24,5 @@ type ModuleHandler interface {
 	GetModule(identifier string) (Module, bool)
 	GetModules() []Module
 	RegisterModule(module Module)
+	ToggleModule(module Module) (bool, error)
 }
