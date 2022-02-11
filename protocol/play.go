@@ -238,6 +238,19 @@ func (p *PlayerAbilities) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundPlayerAbilities, p.Flags, p.FlyingSpeed, p.FieldOfViewModifier)
 }
 
+type PluginMessage struct {
+	Channel pk.String
+	Data    pk.PluginMessageData
+}
+
+func (p *PluginMessage) Read(packet pk.Packet) error {
+	return packet.Scan(&p.Channel, &p.Data)
+}
+
+func (p *PluginMessage) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundPluginMessage, p.Channel, &p.Data)
+}
+
 type Disconnect struct {
 	Reason chat.Message
 }
@@ -342,4 +355,14 @@ func (s *ServerPlayerAbilities) Read(packet pk.Packet) error {
 
 func (s *ServerPlayerAbilities) Marshal() pk.Packet {
 	return pk.Marshal(ServerboundPlayerAbilities, s.Flags, s.FlyingSpeed, s.WalkingSpeed)
+}
+
+type ServerPluginMessage struct {
+	PluginMessage
+}
+
+func (s *ServerPluginMessage) Marshal() pk.Packet {
+	packet := s.PluginMessage.Marshal()
+	packet.ID = ServerboundPluginMessage
+	return packet
 }

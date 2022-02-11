@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -23,6 +22,7 @@ type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.Minecra
 type PacketHandler func(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error)
 type ProtocolStateHandler map[int32]RawPacketHandler
 type ProtocolStateHandlerPool map[protocol.ConnectionState]ProtocolStateHandler
+type PluginMessageHandler func(data []byte, tunnel generic.Tunnel) (result []byte, next bool, err error)
 
 const CompressionThreshold = 1024
 
@@ -92,6 +92,9 @@ var (
 			),
 			protocol.ClientboundPlayerAbilities: WrapPacketHandlers(&protocol.PlayerAbilities{},
 				flight.HandlePlayerAbilities,
+			),
+			protocol.ClientboundPluginMessage: WrapPacketHandlers(&protocol.PluginMessage{},
+				HandlePluginMessage("Texteria", proxy.HandleClientboundTexteriaPacket),
 			),
 			protocol.ClientboundDisconnect: WrapPacketHandlers(&protocol.Disconnect{},
 				HandleDisconnect,
@@ -234,17 +237,31 @@ func HandleDisconnect(packet protocol.Packet, tunnel generic.Tunnel) (result pk.
 	return
 }
 
-func HandlePluginMessage(packet pk.Packet, srcName string) error {
-	var (
-		Channel pk.String
-		Data    pk.PluginMessageData
-	)
+func HandlePluginMessage(targetChannel string, handler PluginMessageHandler) PacketHandler {
+	return func(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+		var (
+			data     []byte
+			channel  string
+			packetID int32
+		)
 
-	err := packet.Scan(&Channel, &Data)
-	if err != nil {
-		return err
+		switch packet.(type) {
+		case *protocol.PluginMessage:
+			pluginMessage := packet.(*protocol.PluginMessage)
+			data, channel = pluginMessage.Data, string(pluginMessage.Channel)
+			packetID = protocol.ClientboundPluginMessage
+		case *protocol.ServerPluginMessage:
+			pluginMessage := packet.(*protocol.ServerPluginMessage)
+			data, channel = pluginMessage.Data, string(pluginMessage.Channel)
+			packetID = protocol.ServerboundPluginMessage
+		}
+
+		if targetChannel == channel {
+			data, next, err = handler(data, tunnel)
+			messageData := pk.PluginMessageData(data)
+			return pk.Marshal(packetID, pk.String(channel), &messageData), next, err
+		}
+
+		return packet.Marshal(), true, nil
 	}
-
-	fmt.Println(fmt.Sprintf("accepted plugin message from %s in channel %s:\n%s", srcName, Channel, hex.Dump(Data)))
-	return nil
 }

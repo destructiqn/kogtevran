@@ -301,7 +301,7 @@ func ReadMap(src []byte) (map[string]interface{}, error) {
 	}
 }
 
-func Encode(d interface{}) ([]byte, error) {
+func EncodeMap(d interface{}) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	t, v := reflect.TypeOf(d), reflect.ValueOf(d)
 
@@ -322,7 +322,7 @@ func Encode(d interface{}) ([]byte, error) {
 	case reflect.Struct:
 		for i := 0; i < t.NumField(); i++ {
 			ft, fv := t.Field(i), v.Field(i)
-			value, ok := ft.Tag.Lookup("bytemap")
+			value, ok := ft.Tag.Lookup("mapstructure")
 			if !ok {
 				continue
 			}
@@ -338,7 +338,7 @@ func Encode(d interface{}) ([]byte, error) {
 			}
 		}
 	case reflect.Ptr:
-		return Encode(v.Elem().Interface())
+		return EncodeMap(v.Elem().Interface())
 	default:
 		return nil, fmt.Errorf("unsupported type: %s", v.Type())
 	}
@@ -436,6 +436,10 @@ func writeField(f interface{}, writer io.Writer) error {
 			}
 		}
 	case reflect.String:
+		if v.String() == "" {
+			return nil
+		}
+
 		_, err := Byte(4).WriteTo(writer)
 		if err != nil {
 			return err
@@ -471,7 +475,7 @@ func writeField(f interface{}, writer io.Writer) error {
 			return err
 		}
 
-		byteMap, err := Encode(f)
+		byteMap, err := EncodeMap(f)
 		if err != nil {
 			return err
 		}
@@ -635,8 +639,8 @@ func writeField(f interface{}, writer io.Writer) error {
 					return err
 				}
 			}
-		case []interface{}:
-			a := f.([]string)
+		case []map[string]interface{}:
+			a := f.([]map[string]interface{})
 
 			_, err := Byte(12).WriteTo(writer)
 			if err != nil {
@@ -649,7 +653,7 @@ func writeField(f interface{}, writer io.Writer) error {
 			}
 
 			for _, byteMap := range a {
-				eByteMap, err := Encode(byteMap)
+				eByteMap, err := EncodeMap(byteMap)
 				if err != nil {
 					return err
 				}
