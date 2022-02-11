@@ -55,6 +55,8 @@ type (
 	VarInt int32
 	//VarLong is variable-length data encoding a two's complement signed 64-bit integer
 	VarLong int64
+	//SignedVarInt is a VimeWorld specific type of VarInt
+	SignedVarInt int32
 
 	//Position x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer (all signed, two's complement)
 	Position struct {
@@ -278,6 +280,22 @@ func (v *VarInt) ReadFrom(r io.Reader) (n int64, err error) {
 	}
 
 	*v = VarInt(V)
+	return
+}
+
+func (s SignedVarInt) WriteTo(w io.Writer) (n int64, err error) {
+	return VarInt(s<<1 ^ s>>31).WriteTo(w)
+}
+
+func (s *SignedVarInt) ReadFrom(r io.Reader) (n int64, err error) {
+	i := VarInt(0)
+	n, err = i.ReadFrom(r)
+	if err != nil {
+		return n, err
+	}
+
+	j := (i<<31>>31 ^ i) >> 1
+	*s = SignedVarInt(j ^ i)
 	return
 }
 
