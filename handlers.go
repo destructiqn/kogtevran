@@ -19,7 +19,7 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/proxy"
 )
 
-type RawPacketHandler func(packet *Packet, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
+type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
 type PacketHandler func(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error)
 type ProtocolStateHandler map[int32]RawPacketHandler
 type ProtocolStateHandlerPool map[protocol.ConnectionState]ProtocolStateHandler
@@ -101,7 +101,7 @@ var (
 )
 
 func WrapPacketHandlers(packet protocol.Packet, handlers ...PacketHandler) RawPacketHandler {
-	return func(rawPacket *Packet, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error) {
+	return func(rawPacket *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error) {
 		err = packet.Read(rawPacket.Packet)
 		if err != nil {
 			return

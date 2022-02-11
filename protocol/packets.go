@@ -12,12 +12,12 @@ const (
 	ConnC2S = 2
 )
 
-type PacketDescription struct {
+type WrappedPacket struct {
 	Name string
 	pk.Packet
 }
 
-type PacketMap map[int]PacketDescription
+type PacketMap map[int]WrappedPacket
 
 var (
 	PlayPacketsS2C = PacketMap{
@@ -138,7 +138,7 @@ func GetPacketMap(connType int) PacketMap {
 	panic("unsupported direction")
 }
 
-func GetPacketDescription(packetID, connType int) (packet PacketDescription, ok bool) {
+func GetPacketDescription(packetID, connType int) (packet WrappedPacket, ok bool) {
 	packet, ok = GetPacketMap(connType)[packetID]
 	return
 }
@@ -156,8 +156,8 @@ func FormatPacket(id int32, connType int) string {
 	return fmt.Sprintf("%s %s", strconv.FormatInt(int64(id), 16), GetPacketName(id, connType))
 }
 
-func WrapPacket(packet pk.Packet, connType int) *PacketDescription {
-	return &PacketDescription{
+func WrapPacket(packet pk.Packet, connType int) *WrappedPacket {
+	return &WrappedPacket{
 		Name:   GetPacketName(packet.ID, connType),
 		Packet: packet,
 	}
