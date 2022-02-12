@@ -1,10 +1,10 @@
 package antiknockback
 
 import (
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	"github.com/ruscalworld/vimeinterceptor/modules"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/modules"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
 )
 
 type AntiKnockback struct {

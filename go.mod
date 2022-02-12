@@ -1,4 +1,4 @@
-module github.com/ruscalworld/vimeinterceptor
+module github.com/destructiqn/kogtevran
 
 go 1.16
 

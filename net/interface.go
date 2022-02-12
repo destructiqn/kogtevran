@@ -1,6 +1,6 @@
 package net
 
-import pk "github.com/ruscalworld/vimeinterceptor/net/packet"
+import pk "github.com/destructiqn/kogtevran/net/packet"
 
 type Writer interface {
 	WritePacket(p pk.Packet) error

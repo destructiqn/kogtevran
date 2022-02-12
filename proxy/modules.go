@@ -6,15 +6,15 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	"github.com/ruscalworld/vimeinterceptor/modules"
-	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
-	"github.com/ruscalworld/vimeinterceptor/modules/aura"
-	"github.com/ruscalworld/vimeinterceptor/modules/cmdcam"
-	"github.com/ruscalworld/vimeinterceptor/modules/flight"
-	"github.com/ruscalworld/vimeinterceptor/modules/longjump"
-	"github.com/ruscalworld/vimeinterceptor/modules/nofall"
-	"github.com/ruscalworld/vimeinterceptor/modules/spammer"
+	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/modules"
+	"github.com/destructiqn/kogtevran/modules/antiknockback"
+	"github.com/destructiqn/kogtevran/modules/aura"
+	"github.com/destructiqn/kogtevran/modules/cmdcam"
+	"github.com/destructiqn/kogtevran/modules/flight"
+	"github.com/destructiqn/kogtevran/modules/longjump"
+	"github.com/destructiqn/kogtevran/modules/nofall"
+	"github.com/destructiqn/kogtevran/modules/spammer"
 )
 
 type ModuleHandler struct {
@@ -94,7 +94,7 @@ func (t *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
 		return value, err
 	}
 
-	err = t.UpdateModuleList()
+	err = t.tunnel.GetTexteriaHandler().UpdateInterface()
 	if err != nil {
 		return value, err
 	}
@@ -142,35 +142,12 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 		modulesControls = append(modulesControls, control)
 
 		if module.IsEnabled() {
-			modulesDisplay = append(modulesDisplay, "§5"+module.GetIdentifier())
+			modulesDisplay = append(modulesDisplay, module.GetIdentifier())
 			control["color"] = -0xBB22BB
 		}
 	}
 
 	return []map[string]interface{}{
-		{
-			"%":      "add",
-			"id":     "kv.mh",
-			"pos":    "TOP_LEFT",
-			"type":   "Rectangle",
-			"width":  137,
-			"height": 40,
-			"color":  -0x80000000,
-
-			"vis": []map[string]interface{}{
-				{
-					"type": "always",
-					"show": true,
-				},
-				{
-					"type": "f3",
-					"show": false,
-				},
-			},
-
-			"x": 3,
-			"y": 22,
-		},
 		{
 			"%":    "add",
 			"id":   "kv.ml",
@@ -191,7 +168,7 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			},
 
 			"x": 2,
-			"y": 2,
+			"y": 24,
 		},
 		{
 			"%": "add:group",
@@ -203,85 +180,7 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 				},
 			},
 		},
-		{
-			"%":       "add",
-			"id":      "kv.mj",
-			"pos":     "TOP_LEFT",
-			"type":    "Text",
-			"scale.x": 2.5,
-			"scale.z": 2.5,
-			"scale.y": 2.5,
-			"text":    []string{"§5K§rogtevra§5n"},
-
-			"vis": []map[string]interface{}{
-				{
-					"type": "always",
-					"show": true,
-				},
-				{
-					"type": "f3",
-					"show": false,
-				},
-			},
-
-			"x": 7,
-			"y": 26,
-		},
-		{
-			"%":       "add",
-			"id":      "kv.mk",
-			"pos":     "TOP_LEFT",
-			"type":    "Text",
-			"scale.x": 1,
-			"scale.z": 1,
-			"scale.y": 1,
-			"text":    []string{"vk.com/§5destructiqn"},
-
-			"vis": []map[string]interface{}{
-				{
-					"type": "always",
-					"show": true,
-				},
-				{
-					"type": "f3",
-					"show": false,
-				},
-			},
-
-			"x": 7,
-			"y": 50,
-		},
-		{
-			"%":       "add",
-			"id":      "kv.mi",
-			"al":      "RIGHT",
-			"pos":     "BOTTOM_RIGHT",
-			"type":    "Text",
-			"scale.x": 1.5,
-			"scale.z": 1.5,
-			"scale.y": 1.5,
-			"text":    []string{"coded by §5kliri"},
-
-			"vis": []map[string]interface{}{
-				{
-					"type": "always",
-					"show": true,
-				},
-				{
-					"type": "f3",
-					"show": false,
-				},
-			},
-
-			"x": 2,
-			"y": 2,
-		},
 	}
-}
-
-func (t *ModuleHandler) UpdateModuleList() error {
-	details := t.GetModulesDetails()
-	return t.tunnel.TexteriaHandler.SendClient(details...)
 }
 
 func RegisterDefaultModules(tunnel generic.Tunnel) {

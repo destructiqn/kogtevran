@@ -3,9 +3,9 @@ package proxy
 import (
 	"bytes"
 	"fmt"
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"github.com/destructiqn/kogtevran/generic"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
 )
 
 type TexteriaHandler struct {
@@ -130,4 +130,108 @@ func (t *TexteriaHandler) InterceptAction(data map[string]interface{}) bool {
 	}
 
 	return modified
+}
+
+func GetBranding() []map[string]interface{} {
+	return []map[string]interface{}{
+		{
+			"%":      "add",
+			"id":     "kv.mh",
+			"pos":    "TOP_LEFT",
+			"type":   "Rectangle",
+			"width":  142,
+			"height": 46,
+			"color":  -0x80000000,
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 7,
+			"y": 25,
+		},
+		{
+			"%":       "add",
+			"id":      "kv.mj",
+			"pos":     "TOP_LEFT",
+			"type":    "Text",
+			"scale.x": 2.5,
+			"scale.z": 2.5,
+			"scale.y": 2.5,
+			"text":    []string{"§9K§rogtevra§9n"},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 14,
+			"y": 32,
+		},
+		{
+			"%":    "add",
+			"id":   "kv.mk",
+			"pos":  "TOP_LEFT",
+			"type": "Text",
+			"text": []string{"by §9kliri"},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 14,
+			"y": 56,
+		},
+		{
+			"%":    "add",
+			"id":   "kv.mi",
+			"al":   "RIGHT",
+			"pos":  "TOP_RIGHT",
+			"type": "Text",
+			"text": []string{
+				fmt.Sprintf("§9Kogtevran §7%s", generic.GetRevision()),
+				"§7vk.com§9/destructiqn",
+			},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 2,
+			"y": 2,
+		},
+	}
+}
+
+func (t *TexteriaHandler) UpdateInterface() error {
+	modulesDetails := t.tunnel.GetModuleHandler().(*ModuleHandler).GetModulesDetails()
+	branding := GetBranding()
+	return t.tunnel.TexteriaHandler.SendClient(append(modulesDetails, branding...)...)
 }

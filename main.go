@@ -11,11 +11,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ruscalworld/vimeinterceptor/net"
-	"github.com/ruscalworld/vimeinterceptor/net/CFB8"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
-	"github.com/ruscalworld/vimeinterceptor/proxy"
+	"github.com/destructiqn/kogtevran/net"
+	"github.com/destructiqn/kogtevran/net/CFB8"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/destructiqn/kogtevran/proxy"
 )
 
 var ServerPort = 25565

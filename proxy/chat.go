@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"github.com/Tnze/go-mc/chat"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
 )
 
 type ChatHandler struct {

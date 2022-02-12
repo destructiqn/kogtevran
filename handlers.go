@@ -9,16 +9,15 @@ import (
 	"strings"
 
 	"github.com/Tnze/go-mc/chat"
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
-	"github.com/ruscalworld/vimeinterceptor/proxy"
+	"github.com/destructiqn/kogtevran/generic"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/destructiqn/kogtevran/proxy"
 
-	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
-	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
-	"github.com/ruscalworld/vimeinterceptor/modules/flight"
-	"github.com/ruscalworld/vimeinterceptor/modules/longjump"
-	"github.com/ruscalworld/vimeinterceptor/modules/nofall"
+	"github.com/destructiqn/kogtevran/modules/antiknockback"
+	"github.com/destructiqn/kogtevran/modules/flight"
+	"github.com/destructiqn/kogtevran/modules/longjump"
+	"github.com/destructiqn/kogtevran/modules/nofall"
 )
 
 type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)

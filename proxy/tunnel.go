@@ -4,10 +4,10 @@ import (
 	"sync"
 
 	"github.com/Tnze/go-mc/chat"
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	"github.com/ruscalworld/vimeinterceptor/net"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/net"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
 )
 
 var CurrentTunnelPool = &TunnelPool{

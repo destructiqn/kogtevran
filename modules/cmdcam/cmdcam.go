@@ -1,6 +1,6 @@
 package cmdcam
 
-import "github.com/ruscalworld/vimeinterceptor/modules"
+import "github.com/destructiqn/kogtevran/modules"
 
 type CMDCam struct {
 	modules.SimpleModule

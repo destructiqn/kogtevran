@@ -3,7 +3,7 @@ package modules
 import (
 	"time"
 
-	"github.com/ruscalworld/vimeinterceptor/generic"
+	"github.com/destructiqn/kogtevran/generic"
 )
 
 const (

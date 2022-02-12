@@ -1,9 +1,9 @@
 package aura
 
 import (
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	"github.com/ruscalworld/vimeinterceptor/minecraft"
-	"github.com/ruscalworld/vimeinterceptor/modules"
+	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/minecraft"
+	"github.com/destructiqn/kogtevran/modules"
 )
 
 type MobAura struct {

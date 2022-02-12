@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
+	pk "github.com/destructiqn/kogtevran/net/packet"
 )
 
 const (

@@ -3,7 +3,7 @@ package modules
 import (
 	"reflect"
 
-	"github.com/ruscalworld/vimeinterceptor/generic"
+	"github.com/destructiqn/kogtevran/generic"
 )
 
 const optionTag = "option"

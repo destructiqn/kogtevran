@@ -2,9 +2,9 @@ package generic
 
 import (
 	"github.com/Tnze/go-mc/chat"
-	"github.com/ruscalworld/vimeinterceptor/minecraft"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"github.com/destructiqn/kogtevran/minecraft"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
 )
 
 type Tunnel interface {
@@ -64,5 +64,6 @@ type InventoryHandler interface {
 }
 
 type TexteriaHandler interface {
+	UpdateInterface() error
 	SendClient(data ...map[string]interface{}) error
 }

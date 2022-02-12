@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
+	pk "github.com/destructiqn/kogtevran/net/packet"
 )
 
 // A Listener is a minecraft Listener

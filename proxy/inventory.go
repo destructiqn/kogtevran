@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/Tnze/go-mc/chat"
-	"github.com/ruscalworld/vimeinterceptor/generic"
-	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
-	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"github.com/destructiqn/kogtevran/generic"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
 )
 
 type InventoryHandler struct {
