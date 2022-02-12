@@ -224,6 +224,20 @@ func (e *EntityTeleport) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundEntityTeleport, e.EntityID, e.X, e.Y, e.Z, e.Yaw, e.Pitch, e.OnGround)
 }
 
+type SetSlot struct {
+	WindowID pk.Byte
+	Slot     pk.Short
+	SlotData pk.Slot
+}
+
+func (s *SetSlot) Read(packet pk.Packet) error {
+	return packet.Scan(&s.WindowID, &s.Slot, &s.SlotData)
+}
+
+func (s *SetSlot) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundSetSlot, s.WindowID, s.Slot, s.SlotData)
+}
+
 type PlayerAbilities struct {
 	Flags               pk.Byte
 	FlyingSpeed         pk.Float

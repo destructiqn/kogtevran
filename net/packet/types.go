@@ -23,59 +23,67 @@ type FieldEncoder io.WriterTo
 type FieldDecoder io.ReaderFrom
 
 type (
-	//Boolean of True is encoded as 0x01, false as 0x00.
+	// Boolean of True is encoded as 0x01, false as 0x00.
 	Boolean bool
-	//Byte is signed 8-bit integer, two's complement
+	// Byte is signed 8-bit integer, two's complement
 	Byte int8
-	//UnsignedByte is unsigned 8-bit integer
+	// UnsignedByte is unsigned 8-bit integer
 	UnsignedByte uint8
-	//Short is signed 16-bit integer, two's complement
+	// Short is signed 16-bit integer, two's complement
 	Short int16
-	//UnsignedShort is unsigned 16-bit integer
+	// UnsignedShort is unsigned 16-bit integer
 	UnsignedShort uint16
-	//Int is signed 32-bit integer, two's complement
+	// Int is signed 32-bit integer, two's complement
 	Int int32
-	//Long is signed 64-bit integer, two's complement
+	// Long is signed 64-bit integer, two's complement
 	Long int64
-	//A Float is a single-precision 32-bit IEEE 754 floating point number
+	// A Float is a single-precision 32-bit IEEE 754 floating point number
 	Float float32
-	//A Double is a double-precision 64-bit IEEE 754 floating point number
+	// A Double is a double-precision 64-bit IEEE 754 floating point number
 	Double float64
-	//String is sequence of Unicode scalar values
+	// String is sequence of Unicode scalar values
 	String string
 
-	//Chat is encoded as a String with max length of 32767.
+	// Chat is encoded as a String with max length of 32767.
 	// Deprecated: Use chat.Message
 	Chat = String
 
-	//Identifier is encoded as a String with max length of 32767.
+	// Identifier is encoded as a String with max length of 32767.
 	Identifier = String
 
-	//VarInt is variable-length data encoding a two's complement signed 32-bit integer
+	// Slot represents inventory slot item
+	Slot struct {
+		BlockID    int16
+		ItemCount  int8
+		ItemDamage int16
+		ItemData   map[string]interface{}
+	}
+
+	// VarInt is variable-length data encoding a two's complement signed 32-bit integer
 	VarInt int32
-	//VarLong is variable-length data encoding a two's complement signed 64-bit integer
+	// VarLong is variable-length data encoding a two's complement signed 64-bit integer
 	VarLong int64
-	//SignedVarInt is a VimeWorld specific type of VarInt
+	// SignedVarInt is a VimeWorld specific type of VarInt
 	SignedVarInt int32
 
-	//Position x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer (all signed, two's complement)
+	// Position x as a 26-bit integer, followed by y as a 12-bit integer, followed by z as a 26-bit integer (all signed, two's complement)
 	Position struct {
 		X, Y, Z int
 	}
 
-	//Angle is rotation angle in steps of 1/256 of a full turn
+	// Angle is rotation angle in steps of 1/256 of a full turn
 	Angle Byte
 
-	//UUID encoded as an unsigned 128-bit integer
+	// UUID encoded as an unsigned 128-bit integer
 	UUID uuid.UUID
 
-	//ByteArray is []byte with prefix VarInt as length
+	// ByteArray is []byte with prefix VarInt as length
 	ByteArray []byte
 
-	//PluginMessageData is only used in LoginPlugin,and it will read all left bytes
+	// PluginMessageData is only used in LoginPlugin, and it will read all left bytes
 	PluginMessageData []byte
 
-	//BitSet represents Java's BitSet, a list of bits.
+	// BitSet represents Java's BitSet, a list of bits.
 	BitSet []int64
 )
 
@@ -543,4 +551,78 @@ func (b BitSet) Set(index int, value bool) {
 	} else {
 		b[index/64] &= ^(1 << (index % 64))
 	}
+}
+
+func (s Slot) IsEmpty() bool {
+	return s.BlockID == -1
+}
+
+func (s Slot) WriteTo(w io.Writer) (n int64, err error) {
+	n, err = Short(s.BlockID).WriteTo(w)
+	if err != nil {
+		return
+	}
+
+	if s.BlockID != -1 {
+		n2, err := Byte(s.ItemCount).WriteTo(w)
+		n += n2
+		if err != nil {
+			return n, err
+		}
+
+		n2, err = Short(s.ItemDamage).WriteTo(w)
+		n += n2
+		if err != nil {
+			return n, err
+		}
+
+		n2, err = NBT(s.ItemData).WriteTo(w)
+		n += n2
+		if err != nil {
+			return n, err
+		}
+	}
+
+	return
+}
+
+func (s *Slot) ReadFrom(r io.Reader) (n int64, err error) {
+	var BlockID Short
+	n, err = BlockID.ReadFrom(r)
+	if err != nil {
+		return
+	}
+
+	s.BlockID = int16(BlockID)
+	if BlockID == -1 {
+		return
+	}
+
+	var (
+		ItemCount  Byte
+		ItemDamage Short
+	)
+
+	n2, err := ItemCount.ReadFrom(r)
+	n += n2
+	if err != nil {
+		return
+	}
+
+	n2, err = ItemDamage.ReadFrom(r)
+	n += n2
+	if err != nil {
+		return
+	}
+
+	s.ItemCount = int8(ItemCount)
+	s.ItemDamage = int16(ItemDamage)
+
+	n2, err = NBT(&s.ItemData).ReadFrom(r)
+	n += n2
+	if err != nil {
+		return
+	}
+
+	return
 }
