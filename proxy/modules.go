@@ -142,20 +142,20 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 		modulesControls = append(modulesControls, control)
 
 		if module.IsEnabled() {
-			modulesDisplay = append(modulesDisplay, "§5" + module.GetIdentifier())
+			modulesDisplay = append(modulesDisplay, "§5"+module.GetIdentifier())
 			control["color"] = -0xBB22BB
 		}
 	}
 
 	return []map[string]interface{}{
 		{
-			"%":	"add",
-			"id":	"kv.mh",
-			"pos":	"TOP_LEFT",
-			"type": "Rectangle",
-			"width": 137,
+			"%":      "add",
+			"id":     "kv.mh",
+			"pos":    "TOP_LEFT",
+			"type":   "Rectangle",
+			"width":  137,
 			"height": 40,
-			"color": -0x80000000,
+			"color":  -0x80000000,
 
 			"vis": []map[string]interface{}{
 				{
@@ -204,14 +204,14 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			},
 		},
 		{
-			"%":    "add",
-			"id":   "kv.mj",
-			"pos":  "TOP_LEFT",
-			"type": "Text",
+			"%":       "add",
+			"id":      "kv.mj",
+			"pos":     "TOP_LEFT",
+			"type":    "Text",
 			"scale.x": 2.5,
 			"scale.z": 2.5,
 			"scale.y": 2.5,
-			"text": []string{"§5K§rogtevra§5n"},
+			"text":    []string{"§5K§rogtevra§5n"},
 
 			"vis": []map[string]interface{}{
 				{
@@ -228,14 +228,14 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			"y": 26,
 		},
 		{
-			"%":    "add",
-			"id":   "kv.mk",
-			"pos":  "TOP_LEFT",
-			"type": "Text",
+			"%":       "add",
+			"id":      "kv.mk",
+			"pos":     "TOP_LEFT",
+			"type":    "Text",
 			"scale.x": 1,
 			"scale.z": 1,
 			"scale.y": 1,
-			"text": []string{"vk.com/§5destructiqn"},
+			"text":    []string{"vk.com/§5destructiqn"},
 
 			"vis": []map[string]interface{}{
 				{
@@ -252,15 +252,15 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			"y": 50,
 		},
 		{
-			"%":    "add",
-			"id":   "kv.mi",
-			"al":	"RIGHT",
-			"pos":  "BOTTOM_RIGHT",
-			"type": "Text",
+			"%":       "add",
+			"id":      "kv.mi",
+			"al":      "RIGHT",
+			"pos":     "BOTTOM_RIGHT",
+			"type":    "Text",
 			"scale.x": 1.5,
 			"scale.z": 1.5,
 			"scale.y": 1.5,
-			"text": []string{"coded by §5kliri"},
+			"text":    []string{"coded by §5kliri"},
 
 			"vis": []map[string]interface{}{
 				{
@@ -288,7 +288,7 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler := tunnel.GetModuleHandler()
 
 	genericAura := aura.GenericAura{
-		MaxDistance: 7, HitAnimation: true,
+		MaxDistance: 7, HitAnimation: false,
 		SimpleTickingModule: modules.SimpleTickingModule{Interval: 50 * time.Millisecond},
 	}
 
