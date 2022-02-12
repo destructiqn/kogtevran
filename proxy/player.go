@@ -1,17 +1,19 @@
 package proxy
 
 import (
+	"time"
+
 	"github.com/ruscalworld/vimeinterceptor/generic"
 	"github.com/ruscalworld/vimeinterceptor/minecraft"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"github.com/ruscalworld/vimeinterceptor/protocol"
-	"time"
 )
 
 type PlayerHandler struct {
 	tunnel   *MinecraftTunnel
 	entityID int32
 	isFlying bool
+	onGround bool
 	location *minecraft.Location
 }
 
@@ -28,6 +30,10 @@ func (p *PlayerHandler) GetEntityID() int32 {
 
 func (p *PlayerHandler) IsFlying() bool {
 	return p.isFlying
+}
+
+func (p *PlayerHandler) IsOnGround() bool {
+	return p.onGround
 }
 
 func (p *PlayerHandler) SetFlying(isFlying bool) {
@@ -54,6 +60,12 @@ func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 	}()
 
 	return packet.Marshal(), true, nil
+}
+
+func HandlePlayer(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+	player := packet.(*protocol.Player)
+	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(player.OnGround)
+	return player.Marshal(), true, nil
 }
 
 func HandlePlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
@@ -89,6 +101,7 @@ func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.
 	playerLook := packet.(*protocol.PlayerLook)
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.Yaw, location.Pitch = float64(playerLook.Yaw), float64(playerLook.Pitch)
+	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(playerLook.OnGround)
 	return playerLook.Marshal(), true, nil
 }
 
@@ -96,6 +109,7 @@ func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result
 	playerPosition := packet.(*protocol.PlayerPosition)
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.X, location.Y, location.Z = float64(playerPosition.X), float64(playerPosition.Y), float64(playerPosition.Z)
+	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(playerPosition.OnGround)
 	return playerPosition.Marshal(), true, nil
 }
 
@@ -104,6 +118,7 @@ func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tu
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.X, location.Y, location.Z = float64(playerPosition.X), float64(playerPosition.Y), float64(playerPosition.Z)
 	location.Yaw, location.Pitch = float64(playerPosition.Yaw), float64(playerPosition.Pitch)
+	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(playerPosition.OnGround)
 	return playerPosition.Marshal(), true, nil
 }
 

@@ -22,6 +22,7 @@ type Tunnel interface {
 
 type PlayerHandler interface {
 	IsFlying() bool
+	IsOnGround() bool
 	SetFlying(isFlying bool)
 	GetLocation() *minecraft.Location
 	GetEntityID() int32

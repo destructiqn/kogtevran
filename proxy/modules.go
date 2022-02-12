@@ -2,8 +2,6 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
-	"github.com/ruscalworld/vimeinterceptor/modules/cmdcam"
 	"log"
 	"sort"
 	"time"
@@ -12,7 +10,10 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/modules"
 	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
 	"github.com/ruscalworld/vimeinterceptor/modules/aura"
+	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
+	"github.com/ruscalworld/vimeinterceptor/modules/cmdcam"
 	"github.com/ruscalworld/vimeinterceptor/modules/flight"
+	"github.com/ruscalworld/vimeinterceptor/modules/longjump"
 	"github.com/ruscalworld/vimeinterceptor/modules/nofall"
 	"github.com/ruscalworld/vimeinterceptor/modules/spammer"
 )
@@ -204,4 +205,5 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
 	moduleHandler.RegisterModule(&cheststealer.ChestStealer{})
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
+	moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
 }

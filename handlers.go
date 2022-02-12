@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
 	"log"
 	"net"
 	"strconv"
@@ -11,12 +10,15 @@ import (
 
 	"github.com/Tnze/go-mc/chat"
 	"github.com/ruscalworld/vimeinterceptor/generic"
-	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
-	"github.com/ruscalworld/vimeinterceptor/modules/flight"
-	"github.com/ruscalworld/vimeinterceptor/modules/nofall"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"github.com/ruscalworld/vimeinterceptor/protocol"
 	"github.com/ruscalworld/vimeinterceptor/proxy"
+
+	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
+	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
+	"github.com/ruscalworld/vimeinterceptor/modules/flight"
+	"github.com/ruscalworld/vimeinterceptor/modules/longjump"
+	"github.com/ruscalworld/vimeinterceptor/modules/nofall"
 )
 
 type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
@@ -42,16 +44,16 @@ var (
 				proxy.HandleChatMessage,
 			),
 			protocol.ServerboundPlayer: WrapPacketHandlers(&protocol.Player{},
-				nofall.HandlePlayer,
+				proxy.HandlePlayer, nofall.HandlePlayer,
 			),
 			protocol.ServerboundPlayerPosition: WrapPacketHandlers(&protocol.PlayerPosition{},
-				nofall.HandlePlayerPosition, proxy.HandlePlayerPosition,
+				longjump.HandlePlayerPosition, proxy.HandlePlayerPosition, nofall.HandlePlayerPosition,
 			),
 			protocol.ServerboundPlayerLook: WrapPacketHandlers(&protocol.PlayerLook{},
-				nofall.HandlePlayerLook, proxy.HandlePlayerLook,
+				proxy.HandlePlayerLook, nofall.HandlePlayerLook,
 			),
 			protocol.ServerboundPlayerPositionAndLook: WrapPacketHandlers(&protocol.ServerPlayerPositionAndLook{},
-				nofall.HandleServerPlayerPositionAndLook, proxy.HandleServerPlayerPositionAndLook,
+				longjump.HandleServerPlayerPositionAndLook, proxy.HandleServerPlayerPositionAndLook, nofall.HandleServerPlayerPositionAndLook,
 			),
 			protocol.ServerboundCloseWindow: WrapPacketHandlers(&protocol.ServerCloseWindow{},
 				proxy.HandleCloseWindow,
