@@ -7,12 +7,13 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/protocol"
 )
 
-type Predicate func(mob minecraft.Entity) bool
+type Predicate func(entity minecraft.Entity) bool
 
 type GenericAura struct {
 	modules.SimpleTickingModule
 	MaxDistance  float64 `option:"maxDistance"`
 	HitAnimation bool    `option:"hitAnimation"`
+	Filter       Predicate
 }
 
 func (a *GenericAura) Tick() error {
@@ -35,8 +36,4 @@ func (a *GenericAura) Tick() error {
 
 	a.Tunnel.GetEntityHandler().Unlock()
 	return nil
-}
-
-func (a *GenericAura) Filter(_ minecraft.Entity) bool {
-	return true
 }
