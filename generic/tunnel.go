@@ -11,6 +11,7 @@ type Tunnel interface {
 	SetState(state protocol.ConnectionState)
 	WriteClient(packet pk.Packet) error
 	WriteServer(packet pk.Packet) error
+	GetInventoryHandler() InventoryHandler
 	GetPlayerHandler() PlayerHandler
 	GetEntityHandler() EntityHandler
 	GetModuleHandler() ModuleHandler
@@ -41,4 +42,20 @@ type EntityHandler interface {
 
 type ChatHandler interface {
 	SendMessage(message chat.Message, position protocol.ChatPosition) error
+}
+
+type Window interface {
+	GetType() string
+	GetTitle() chat.Message
+	GetContents() []pk.Slot
+	GetItem(slot int) pk.Slot
+	PutItem(slot int, item pk.Slot)
+}
+
+type InventoryHandler interface {
+	GetWindows() []Window
+	GetWindow(id int) (Window, bool)
+	OpenWindow(id int, window Window)
+	CloseWindow(id int)
+	Reset()
 }

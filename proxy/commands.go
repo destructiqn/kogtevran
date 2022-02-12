@@ -102,6 +102,17 @@ var Commands = map[string]CommandHandler{
 		return tunnel.WriteClient(pk.Marshal(0x1D, pk.VarInt(tunnel.GetPlayerHandler().GetEntityID()), pk.Byte(id), pk.Byte(amplifier), pk.VarInt(100000), pk.Boolean(true)))
 	},
 
+	"inventory": func(args []string, tunnel generic.Tunnel) error {
+		for id, window := range tunnel.GetInventoryHandler().GetWindows() {
+			fmt.Println(id, window, ":")
+			for slot, item := range window.GetContents() {
+				fmt.Println(slot, item)
+			}
+			fmt.Println("---")
+		}
+		return nil
+	},
+
 	"entities": func(args []string, tunnel generic.Tunnel) error {
 		log.Println(tunnel.GetEntityHandler().GetEntities())
 		return nil

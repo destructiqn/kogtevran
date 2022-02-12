@@ -64,11 +64,16 @@ type MinecraftTunnel struct {
 	EnableEncryptionS2C    chan []byte
 	EnableEncryptionC2S    chan [][]byte
 
-	TexteriaHandler *TexteriaHandler
-	ModuleHandler   *ModuleHandler
-	PlayerHandler   *PlayerHandler
-	EntityHandler   *EntityHandler
-	ChatHandler     *ChatHandler
+	InventoryHandler *InventoryHandler
+	TexteriaHandler  *TexteriaHandler
+	ModuleHandler    *ModuleHandler
+	PlayerHandler    *PlayerHandler
+	EntityHandler    *EntityHandler
+	ChatHandler      *ChatHandler
+}
+
+func (t *MinecraftTunnel) GetInventoryHandler() generic.InventoryHandler {
+	return t.InventoryHandler
 }
 
 func (t *MinecraftTunnel) GetTexteriaHandler() *TexteriaHandler {
@@ -134,6 +139,7 @@ func WrapConn(server, client *net.Conn) *MinecraftTunnel {
 		EnableEncryptionC2S:       make(chan [][]byte),
 	}
 
+	tunnel.InventoryHandler = NewInventoryHandler()
 	tunnel.TexteriaHandler = NewTexteriaHandler(tunnel)
 	tunnel.ModuleHandler = NewModuleHandler(tunnel)
 	tunnel.EntityHandler = NewEntityHandler()

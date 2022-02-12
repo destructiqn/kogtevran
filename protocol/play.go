@@ -224,6 +224,40 @@ func (e *EntityTeleport) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundEntityTeleport, e.EntityID, e.X, e.Y, e.Z, e.Yaw, e.Pitch, e.OnGround)
 }
 
+type OpenWindow struct {
+	WindowID      pk.UnsignedByte
+	WindowType    pk.String
+	WindowTitle   chat.Message
+	NumberOfSlots pk.UnsignedByte
+	EntityID      pk.Int
+}
+
+func (o *OpenWindow) Read(packet pk.Packet) error {
+	return packet.Scan(&o.WindowID, &o.WindowType, &o.WindowTitle, &o.NumberOfSlots, &pk.Opt{
+		Has:   o.WindowType == "EntityHorse",
+		Field: &o.EntityID,
+	})
+}
+
+func (o *OpenWindow) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundOpenWindow, o.WindowID, o.WindowType, o.WindowTitle, o.NumberOfSlots, pk.Opt{
+		Has:   o.WindowType == "EntityHorse",
+		Field: o.EntityID,
+	})
+}
+
+type CloseWindow struct {
+	WindowID pk.UnsignedByte
+}
+
+func (c *CloseWindow) Read(packet pk.Packet) error {
+	return packet.Scan(&c.WindowID)
+}
+
+func (c *CloseWindow) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundCloseWindow, c.WindowID)
+}
+
 type SetSlot struct {
 	WindowID pk.Byte
 	Slot     pk.Short
@@ -236,6 +270,23 @@ func (s *SetSlot) Read(packet pk.Packet) error {
 
 func (s *SetSlot) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundSetSlot, s.WindowID, s.Slot, s.SlotData)
+}
+
+type WindowItems struct {
+	WindowID pk.UnsignedByte
+	SlotData []pk.Slot
+}
+
+func (w *WindowItems) Read(packet pk.Packet) error {
+	var count pk.Short
+	return packet.Scan(&w.WindowID, &count, &pk.Ary{
+		Len: &count,
+		Ary: &w.SlotData,
+	})
+}
+
+func (w *WindowItems) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundWindowItems, w.WindowID, pk.Short(len(w.SlotData)), pk.Ary{Ary: w.SlotData})
 }
 
 type PlayerAbilities struct {
@@ -355,6 +406,16 @@ func (p *ServerPlayerPositionAndLook) Read(packet pk.Packet) error {
 
 func (p *ServerPlayerPositionAndLook) Marshal() pk.Packet {
 	return pk.Marshal(ServerboundPlayerPositionAndLook, p.X, p.Y, p.Z, p.Yaw, p.Pitch, p.OnGround)
+}
+
+type ServerCloseWindow struct {
+	CloseWindow
+}
+
+func (s *ServerCloseWindow) Marshal() pk.Packet {
+	packet := s.CloseWindow.Marshal()
+	packet.ID = ServerboundCloseWindow
+	return packet
 }
 
 type ServerPlayerAbilities struct {

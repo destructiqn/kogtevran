@@ -46,6 +46,7 @@ func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 	joinGame := packet.(*protocol.JoinGame)
 	tunnel.GetPlayerHandler().(*PlayerHandler).entityID = int32(joinGame.EntityID)
 	tunnel.GetEntityHandler().(*EntityHandler).ResetEntities()
+	tunnel.GetInventoryHandler().Reset()
 
 	go func() {
 		time.Sleep(time.Second)
