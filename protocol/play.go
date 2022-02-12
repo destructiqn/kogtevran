@@ -408,6 +408,23 @@ func (p *ServerPlayerPositionAndLook) Marshal() pk.Packet {
 	return pk.Marshal(ServerboundPlayerPositionAndLook, p.X, p.Y, p.Z, p.Yaw, p.Pitch, p.OnGround)
 }
 
+type ClickWindow struct {
+	WindowID     pk.UnsignedByte
+	Slot         pk.Short
+	Button       pk.Byte
+	ActionNumber pk.Short
+	Mode         pk.Byte
+	ClickedItem  pk.Slot
+}
+
+func (c *ClickWindow) Read(packet pk.Packet) error {
+	return packet.Scan(&c.WindowID, &c.Slot, &c.Button, &c.ActionNumber, &c.Mode, &c.ClickedItem)
+}
+
+func (c *ClickWindow) Marshal() pk.Packet {
+	return pk.Marshal(ServerboundClickWindow, c.WindowID, c.Slot, c.Button, c.ActionNumber, c.Mode, c.ClickedItem)
+}
+
 type ServerCloseWindow struct {
 	CloseWindow
 }

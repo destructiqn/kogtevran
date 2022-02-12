@@ -46,8 +46,9 @@ type ChatHandler interface {
 
 type Window interface {
 	GetType() string
+	GetSize() int
 	GetTitle() chat.Message
-	GetContents() []pk.Slot
+	GetContents() map[int]pk.Slot
 	GetItem(slot int) pk.Slot
 	PutItem(slot int, item pk.Slot)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
 	"log"
 	"net"
 	"strconv"
@@ -94,16 +95,16 @@ var (
 				proxy.HandleEntityTeleport,
 			),
 			protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
-				proxy.HandleOpenWindow,
+				proxy.HandleOpenWindow, cheststealer.HandleOpenWindow,
 			),
 			protocol.ClientboundCloseWindow: WrapPacketHandlers(&protocol.CloseWindow{},
 				proxy.HandleCloseWindow,
 			),
 			protocol.ClientboundSetSlot: WrapPacketHandlers(&protocol.SetSlot{},
-				proxy.HandleSetSlot,
+				proxy.HandleSetSlot, cheststealer.HandleSetSlot,
 			),
 			protocol.ClientboundWindowItems: WrapPacketHandlers(&protocol.WindowItems{},
-				proxy.HandleWindowItems,
+				proxy.HandleWindowItems, cheststealer.HandleWindowItems,
 			),
 			protocol.ClientboundPlayerAbilities: WrapPacketHandlers(&protocol.PlayerAbilities{},
 				flight.HandlePlayerAbilities,

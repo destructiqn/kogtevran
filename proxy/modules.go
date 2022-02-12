@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
 	"log"
 	"sort"
 	"time"
@@ -200,4 +201,5 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&aura.KillAura{GenericAura: genericAura})
 	moduleHandler.RegisterModule(&aura.MobAura{GenericAura: genericAura})
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
+	moduleHandler.RegisterModule(&cheststealer.ChestStealer{})
 }

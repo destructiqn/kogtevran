@@ -16,7 +16,7 @@ type InventoryHandler struct {
 
 func NewInventoryHandler() *InventoryHandler {
 	return &InventoryHandler{windows: map[int]generic.Window{
-		0: NewWindow("", chat.Text("Player Inventory")),
+		0: NewWindow(44, "", chat.Text("Player Inventory")),
 	}}
 }
 
@@ -64,34 +64,31 @@ func (i *InventoryHandler) Reset() {
 }
 
 type Window struct {
+	size  int
 	wType string
 	title chat.Message
 	items map[int]pk.Slot
 	sync.Mutex
 }
 
-func NewWindow(wType string, title chat.Message) *Window {
-	return &Window{wType: wType, title: title, items: make(map[int]pk.Slot)}
+func NewWindow(size int, wType string, title chat.Message) *Window {
+	return &Window{size: size, wType: wType, title: title, items: make(map[int]pk.Slot)}
 }
 
 func (w *Window) GetType() string {
 	return w.wType
 }
 
+func (w *Window) GetSize() int {
+	return w.size
+}
+
 func (w *Window) GetTitle() chat.Message {
 	return w.title
 }
 
-func (w *Window) GetContents() []pk.Slot {
-	w.Lock()
-	defer w.Unlock()
-
-	slots := make([]pk.Slot, 0)
-	for _, slot := range w.items {
-		slots = append(slots, slot)
-	}
-
-	return slots
+func (w *Window) GetContents() map[int]pk.Slot {
+	return w.items
 }
 
 func (w *Window) PutItem(slot int, item pk.Slot) {
@@ -106,7 +103,11 @@ func (w *Window) GetItem(slot int) pk.Slot {
 
 func HandleOpenWindow(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
 	openWindow := packet.(*protocol.OpenWindow)
-	tunnel.GetInventoryHandler().OpenWindow(int(openWindow.WindowID), NewWindow(string(openWindow.WindowType), openWindow.WindowTitle))
+
+	tunnel.GetInventoryHandler().OpenWindow(int(openWindow.WindowID), NewWindow(
+		int(openWindow.NumberOfSlots), string(openWindow.WindowType), openWindow.WindowTitle),
+	)
+
 	return openWindow.Marshal(), true, nil
 }
 

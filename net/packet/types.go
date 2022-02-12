@@ -56,7 +56,7 @@ type (
 		BlockID    int16
 		ItemCount  int8
 		ItemDamage int16
-		ItemData   map[string]interface{}
+		ItemData   nbt.RawMessage
 	}
 
 	// VarInt is variable-length data encoding a two's complement signed 32-bit integer
