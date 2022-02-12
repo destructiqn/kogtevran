@@ -10,7 +10,6 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/modules"
 	"github.com/ruscalworld/vimeinterceptor/modules/antiknockback"
 	"github.com/ruscalworld/vimeinterceptor/modules/aura"
-	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
 	"github.com/ruscalworld/vimeinterceptor/modules/cmdcam"
 	"github.com/ruscalworld/vimeinterceptor/modules/flight"
 	"github.com/ruscalworld/vimeinterceptor/modules/longjump"
@@ -143,12 +142,35 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 		modulesControls = append(modulesControls, control)
 
 		if module.IsEnabled() {
-			modulesDisplay = append(modulesDisplay, module.GetIdentifier())
+			modulesDisplay = append(modulesDisplay, "§5" + module.GetIdentifier())
 			control["color"] = -0xBB22BB
 		}
 	}
 
 	return []map[string]interface{}{
+		{
+			"%":	"add",
+			"id":	"kv.mh",
+			"pos":	"TOP_LEFT",
+			"type": "Rectangle",
+			"width": 137,
+			"height": 40,
+			"color": -0x80000000,
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 3,
+			"y": 22,
+		},
 		{
 			"%":    "add",
 			"id":   "kv.ml",
@@ -181,6 +203,79 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 				},
 			},
 		},
+		{
+			"%":    "add",
+			"id":   "kv.mj",
+			"pos":  "TOP_LEFT",
+			"type": "Text",
+			"scale.x": 2.5,
+			"scale.z": 2.5,
+			"scale.y": 2.5,
+			"text": []string{"§5K§rogtevra§5n"},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 7,
+			"y": 26,
+		},
+		{
+			"%":    "add",
+			"id":   "kv.mk",
+			"pos":  "TOP_LEFT",
+			"type": "Text",
+			"scale.x": 1,
+			"scale.z": 1,
+			"scale.y": 1,
+			"text": []string{"vk.com/§5destructiqn"},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 7,
+			"y": 50,
+		},
+		{
+			"%":    "add",
+			"id":   "kv.mi",
+			"al":	"RIGHT",
+			"pos":  "BOTTOM_RIGHT",
+			"type": "Text",
+			"scale.x": 1.5,
+			"scale.z": 1.5,
+			"scale.y": 1.5,
+			"text": []string{"coded by §5kliri"},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
+				},
+				{
+					"type": "f3",
+					"show": false,
+				},
+			},
+
+			"x": 2,
+			"y": 2,
+		},
 	}
 }
 
@@ -203,7 +298,6 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&aura.KillAura{GenericAura: genericAura})
 	moduleHandler.RegisterModule(&aura.MobAura{GenericAura: genericAura})
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
-	moduleHandler.RegisterModule(&cheststealer.ChestStealer{})
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
 	moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
 }
