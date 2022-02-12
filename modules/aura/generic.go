@@ -18,6 +18,7 @@ type GenericAura struct {
 
 func (a *GenericAura) Tick() error {
 	a.Tunnel.GetEntityHandler().Lock()
+	a.HitAnimation = false
 	location := a.Tunnel.GetPlayerHandler().GetLocation()
 	for id, entity := range a.Tunnel.GetEntityHandler().GetEntities() {
 		if !a.Filter(entity) || entity.GetLocation().Distance(location) > a.MaxDistance {
