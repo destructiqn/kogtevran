@@ -17,6 +17,10 @@ func NewTexteriaHandler(tunnel *MinecraftTunnel) *TexteriaHandler {
 	return &TexteriaHandler{tunnel: tunnel}
 }
 
+// HandleClientboundTexteriaPacket - метод, обрабатывавший пакеты Texteria, но из-за проблем с парсингом ByteMap'ов
+// не используется
+//
+// Deprecated
 func HandleClientboundTexteriaPacket(data []byte, tunnel generic.Tunnel) (result []byte, next bool, err error) {
 	minecraftTunnel := tunnel.(*MinecraftTunnel)
 

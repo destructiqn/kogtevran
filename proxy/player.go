@@ -5,6 +5,7 @@ import (
 	"github.com/ruscalworld/vimeinterceptor/minecraft"
 	pk "github.com/ruscalworld/vimeinterceptor/net/packet"
 	"github.com/ruscalworld/vimeinterceptor/protocol"
+	"time"
 )
 
 type PlayerHandler struct {
@@ -45,6 +46,12 @@ func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 	joinGame := packet.(*protocol.JoinGame)
 	tunnel.GetPlayerHandler().(*PlayerHandler).entityID = int32(joinGame.EntityID)
 	tunnel.GetEntityHandler().(*EntityHandler).ResetEntities()
+
+	go func() {
+		time.Sleep(time.Second)
+		_ = tunnel.GetModuleHandler().(*ModuleHandler).UpdateModuleList()
+	}()
+
 	return packet.Marshal(), true, nil
 }
 

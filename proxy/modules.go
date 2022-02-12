@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/ruscalworld/vimeinterceptor/generic"
@@ -47,6 +48,20 @@ func (t *ModuleHandler) RegisterModule(module generic.Module) {
 			}
 		}(tickingModule)
 	}
+}
+
+type ModuleList []generic.Module
+
+func (m ModuleList) Len() int {
+	return len([]generic.Module(m))
+}
+
+func (m ModuleList) Less(i, j int) bool {
+	return m[i].GetIdentifier() < m[j].GetIdentifier()
+}
+
+func (m ModuleList) Swap(i, j int) {
+	m[i], m[j] = m[j], m[i]
 }
 
 func (t *ModuleHandler) GetModules() []generic.Module {
@@ -95,7 +110,10 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 	modulesControls := make([]map[string]interface{}, 0)
 
 	x, y := 10, 20
-	for _, module := range t.GetModules() {
+	modulesList := ModuleList(t.GetModules())
+	sort.Sort(modulesList)
+
+	for _, module := range modulesList {
 		control := map[string]interface{}{
 			"id":    fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
 			"type":  "Button",
