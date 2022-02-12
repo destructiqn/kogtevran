@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
+	"github.com/ruscalworld/vimeinterceptor/modules/cmdcam"
 	"log"
 	"sort"
 	"time"
@@ -184,7 +185,7 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 
 func (t *ModuleHandler) UpdateModuleList() error {
 	details := t.GetModulesDetails()
-	return t.tunnel.TexteriaHandler.SendClient(details)
+	return t.tunnel.TexteriaHandler.SendClient(details...)
 }
 
 func RegisterDefaultModules(tunnel generic.Tunnel) {
@@ -202,4 +203,5 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&aura.MobAura{GenericAura: genericAura})
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
 	moduleHandler.RegisterModule(&cheststealer.ChestStealer{})
+	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
 }

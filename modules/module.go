@@ -14,6 +14,7 @@ const (
 	ModuleSpammer       = "Spammer"
 	ModuleMobAura       = "MobAura"
 	ModuleChestStealer  = "ChestStealer"
+	ModuleCMDCam        = "CMDCam"
 )
 
 type DefaultModule struct {

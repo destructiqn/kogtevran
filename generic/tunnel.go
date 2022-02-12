@@ -12,6 +12,7 @@ type Tunnel interface {
 	WriteClient(packet pk.Packet) error
 	WriteServer(packet pk.Packet) error
 	GetInventoryHandler() InventoryHandler
+	GetTexteriaHandler() TexteriaHandler
 	GetPlayerHandler() PlayerHandler
 	GetEntityHandler() EntityHandler
 	GetModuleHandler() ModuleHandler
@@ -59,4 +60,8 @@ type InventoryHandler interface {
 	OpenWindow(id int, window Window)
 	CloseWindow(id int)
 	Reset()
+}
+
+type TexteriaHandler interface {
+	SendClient(data ...map[string]interface{}) error
 }

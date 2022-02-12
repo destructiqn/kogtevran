@@ -45,7 +45,7 @@ func HandleClientboundTexteriaPacket(data []byte, tunnel generic.Tunnel) (result
 			return
 		}
 
-		modified := minecraftTunnel.GetTexteriaHandler().InterceptAction(byteMap)
+		modified := minecraftTunnel.GetTexteriaHandler().(*TexteriaHandler).InterceptAction(byteMap)
 		if modified {
 			actionData, err = pk.EncodeMap(byteMap)
 			if err != nil {
@@ -93,7 +93,7 @@ func HandleClientboundTexteriaPacket(data []byte, tunnel generic.Tunnel) (result
 	return finalBuffer.Bytes(), true, err
 }
 
-func (t *TexteriaHandler) SendClient(data []map[string]interface{}) error {
+func (t *TexteriaHandler) SendClient(data ...map[string]interface{}) error {
 	buffer := &bytes.Buffer{}
 	_, err := pk.VarInt(len(data)).WriteTo(buffer)
 	if err != nil {

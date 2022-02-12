@@ -76,7 +76,7 @@ func (t *MinecraftTunnel) GetInventoryHandler() generic.InventoryHandler {
 	return t.InventoryHandler
 }
 
-func (t *MinecraftTunnel) GetTexteriaHandler() *TexteriaHandler {
+func (t *MinecraftTunnel) GetTexteriaHandler() generic.TexteriaHandler {
 	return t.TexteriaHandler
 }
 
