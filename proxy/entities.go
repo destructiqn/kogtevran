@@ -50,7 +50,7 @@ func (h *EntityHandler) EntityRelativeMove(entityID int, dx, dy, dz float64) {
 	entity.GetLocation().Z += dz
 }
 
-func (h *EntityHandler) EntityTeleport(entityID int, x, y, z float64, yaw, pitch byte) {
+func (h *EntityHandler) EntityTeleport(entityID int, x, y, z, yaw, pitch float64) {
 	entity, ok := h.Entities[entityID]
 	if !ok {
 		return
@@ -84,8 +84,8 @@ func HandleSpawnPlayer(packet protocol.Packet, tunnel generic.Tunnel) (result pk
 			X:     float64(spawnPlayer.X) / 32,
 			Y:     float64(spawnPlayer.Y) / 32,
 			Z:     float64(spawnPlayer.Z) / 32,
-			Yaw:   byte(spawnPlayer.Yaw),
-			Pitch: byte(spawnPlayer.Pitch),
+			Yaw:   float64(spawnPlayer.Yaw),
+			Pitch: float64(spawnPlayer.Pitch),
 		}},
 	}
 
@@ -100,8 +100,8 @@ func HandleSpawnMob(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 			X:     float64(spawnMob.X) / 32,
 			Y:     float64(spawnMob.Y) / 32,
 			Z:     float64(spawnMob.Z) / 32,
-			Yaw:   byte(spawnMob.Yaw),
-			Pitch: byte(spawnMob.Pitch),
+			Yaw:   float64(spawnMob.Yaw),
+			Pitch: float64(spawnMob.Pitch),
 		}},
 		Type: minecraft.MobType(spawnMob.Type),
 	}
@@ -139,6 +139,6 @@ func HandleEntityTeleport(packet protocol.Packet, tunnel generic.Tunnel) (result
 	entityTeleport := packet.(*protocol.EntityTeleport)
 	x, y, z := entityTeleport.X, entityTeleport.Y, entityTeleport.Z
 	yaw, pitch := entityTeleport.Yaw, entityTeleport.Pitch
-	tunnel.GetEntityHandler().EntityTeleport(int(entityTeleport.EntityID), float64(x)/32, float64(y)/32, float64(z)/32, byte(yaw), byte(pitch))
+	tunnel.GetEntityHandler().EntityTeleport(int(entityTeleport.EntityID), float64(x)/32, float64(y)/32, float64(z)/32, float64(yaw), float64(pitch))
 	return packet.Marshal(), true, nil
 }

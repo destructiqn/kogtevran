@@ -394,6 +394,19 @@ func (p *PlayerPosition) Marshal() pk.Packet {
 	return pk.Marshal(ServerboundPlayerPosition, p.X, p.Y, p.Z, p.OnGround)
 }
 
+type PlayerLook struct {
+	Yaw, Pitch pk.Float
+	OnGround   pk.Boolean
+}
+
+func (p *PlayerLook) Read(packet pk.Packet) error {
+	return packet.Scan(&p.Yaw, &p.Pitch, &p.OnGround)
+}
+
+func (p *PlayerLook) Marshal() pk.Packet {
+	return pk.Marshal(ServerboundPlayerLook, p.Yaw, p.Pitch, p.OnGround)
+}
+
 type ServerPlayerPositionAndLook struct {
 	X, Y, Z    pk.Double
 	Yaw, Pitch pk.Float

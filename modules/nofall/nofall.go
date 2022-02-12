@@ -33,6 +33,16 @@ func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result
 	return playerPosition.Marshal(), true, nil
 }
 
+func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+	playerLook := packet.(*protocol.PlayerLook)
+
+	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleNoFall) {
+		playerLook.OnGround = true
+	}
+
+	return playerLook.Marshal(), true, nil
+}
+
 func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
 	playerPosition := packet.(*protocol.ServerPlayerPositionAndLook)
 

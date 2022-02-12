@@ -81,8 +81,15 @@ func HandlePlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) 
 		playerHandler.location.Z = float64(z)
 	}
 
-	playerHandler.location.Yaw, playerHandler.location.Pitch = byte(yaw), byte(pitch)
+	playerHandler.location.Yaw, playerHandler.location.Pitch = float64(yaw), float64(pitch)
 	return packet.Marshal(), true, nil
+}
+
+func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+	playerLook := packet.(*protocol.PlayerLook)
+	location := tunnel.GetPlayerHandler().GetLocation()
+	location.Yaw, location.Pitch = float64(playerLook.Yaw), float64(playerLook.Pitch)
+	return playerLook.Marshal(), true, nil
 }
 
 func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
@@ -96,7 +103,7 @@ func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tu
 	playerPosition := packet.(*protocol.ServerPlayerPositionAndLook)
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.X, location.Y, location.Z = float64(playerPosition.X), float64(playerPosition.Y), float64(playerPosition.Z)
-	location.Yaw, location.Pitch = byte(playerPosition.Yaw), byte(playerPosition.Pitch)
+	location.Yaw, location.Pitch = float64(playerPosition.Yaw), float64(playerPosition.Pitch)
 	return playerPosition.Marshal(), true, nil
 }
 

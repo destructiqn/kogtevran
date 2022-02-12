@@ -4,7 +4,7 @@ import "math"
 
 type Location struct {
 	X, Y, Z    float64
-	Yaw, Pitch byte
+	Yaw, Pitch float64
 }
 
 func (l *Location) Distance(another *Location) float64 {
