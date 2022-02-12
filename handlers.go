@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/ruscalworld/vimeinterceptor/modules/cheststealer"
 	"log"
 	"net"
 	"strconv"
@@ -94,18 +93,18 @@ var (
 			protocol.ClientboundEntityTeleport: WrapPacketHandlers(&protocol.EntityTeleport{},
 				proxy.HandleEntityTeleport,
 			),
-			protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
-				proxy.HandleOpenWindow, cheststealer.HandleOpenWindow,
-			),
-			protocol.ClientboundCloseWindow: WrapPacketHandlers(&protocol.CloseWindow{},
-				proxy.HandleCloseWindow,
-			),
-			protocol.ClientboundSetSlot: WrapPacketHandlers(&protocol.SetSlot{},
-				proxy.HandleSetSlot, cheststealer.HandleSetSlot,
-			),
-			protocol.ClientboundWindowItems: WrapPacketHandlers(&protocol.WindowItems{},
-				proxy.HandleWindowItems, cheststealer.HandleWindowItems,
-			),
+			// protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
+			// 	proxy.HandleOpenWindow, cheststealer.HandleOpenWindow,
+			// ),
+			// protocol.ClientboundCloseWindow: WrapPacketHandlers(&protocol.CloseWindow{},
+			// 	proxy.HandleCloseWindow,
+			// ),
+			// protocol.ClientboundSetSlot: WrapPacketHandlers(&protocol.SetSlot{},
+			// 	proxy.HandleSetSlot, cheststealer.HandleSetSlot,
+			// ),
+			// protocol.ClientboundWindowItems: WrapPacketHandlers(&protocol.WindowItems{},
+			// 	proxy.HandleWindowItems, cheststealer.HandleWindowItems,
+			// ),
 			protocol.ClientboundPlayerAbilities: WrapPacketHandlers(&protocol.PlayerAbilities{},
 				flight.HandlePlayerAbilities,
 			),
