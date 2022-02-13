@@ -152,7 +152,14 @@ func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result pk.P
 	}
 
 	sessionID := strings.Split(string(handshake.ServerAddress), ".")[0]
-	proxy.CurrentTunnelPool.RegisterTunnel(sessionID, tunnel.(*proxy.MinecraftTunnel))
+	tunnelPair, ok := proxy.CurrentTunnelPool.GetPair(sessionID)
+	if !ok {
+		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("unknown session"))
+		return pk.Packet{}, false, nil
+	}
+
+	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
+	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
 
 	host, sPort, err := net.SplitHostPort(tunnel.(*proxy.MinecraftTunnel).Server.Socket.RemoteAddr().String())
 	if err != nil {
@@ -179,8 +186,7 @@ func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (res
 		return
 	}
 
-	<-minecraftTunnel.AuxiliaryChannelAvailable
-	err = minecraftTunnel.AuxiliaryChannel.SendMessage(proxy.EncryptionDataRequest, nil)
+	err = minecraftTunnel.TunnelPair.Auxiliary.SendMessage(proxy.EncryptionDataRequest, nil)
 	if err != nil {
 		return
 	}
