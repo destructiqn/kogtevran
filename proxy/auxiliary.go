@@ -26,8 +26,8 @@ const (
 )
 
 type AuxiliaryChannel struct {
-	Conn            *websocket.Conn
-	MinecraftTunnel *MinecraftTunnel
+	Conn       *websocket.Conn
+	TunnelPair *TunnelPair
 }
 
 func (c *AuxiliaryChannel) Handle() {
@@ -54,7 +54,7 @@ func (c *AuxiliaryChannel) SendMessage(operation AuxiliaryOperationCode, payload
 }
 
 func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
-	if c.MinecraftTunnel == nil && message.OperationCode != Handshake {
+	if c.TunnelPair == nil && message.OperationCode != Handshake {
 		return fmt.Errorf("expected handshake for request with unknown source, but got %d", message.OperationCode)
 	}
 
@@ -66,14 +66,13 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			return err
 		}
 
-		tunnel, ok := CurrentTunnelPool.GetTunnel(handshake.SessionID)
-		if !ok {
-			return errors.New("unknown session")
+		pair := &TunnelPair{
+			SessionID: handshake.SessionID,
+			Auxiliary: c,
 		}
 
-		c.MinecraftTunnel = tunnel
-		tunnel.AuxiliaryChannel = c
-		tunnel.AuxiliaryChannelAvailable <- true
+		c.TunnelPair = pair
+		CurrentTunnelPool.RegisterPair(handshake.SessionID, pair)
 	case EncryptionDataResponse:
 		var encryptionData AuxiliaryEncryptionData
 		err := mapstructure.Decode(message.Payload, &encryptionData)
@@ -81,11 +80,11 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			return err
 		}
 
-		if c.MinecraftTunnel == nil {
+		if c.TunnelPair == nil {
 			return errors.New("cannot find corresponding minecraft tunnel")
 		}
 
-		c.MinecraftTunnel.EnableEncryptionC2S <- encryptionData.SharedSecret
+		c.TunnelPair.Primary.EnableEncryptionC2S <- encryptionData.SharedSecret
 	}
 
 	return nil
@@ -117,9 +116,11 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer conn.Close()
 	log.Println("accepted auxiliary connection from", r.RemoteAddr)
 
 	channel := AuxiliaryChannel{Conn: conn}
 	channel.Handle()
+
+	log.Println("closing auxiliary connection from", r.RemoteAddr)
+	conn.Close()
 }

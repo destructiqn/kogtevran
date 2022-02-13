@@ -17,6 +17,7 @@ type Tunnel interface {
 	GetEntityHandler() EntityHandler
 	GetModuleHandler() ModuleHandler
 	GetChatHandler() ChatHandler
+	Disconnect(message chat.Message)
 	Close()
 }
 

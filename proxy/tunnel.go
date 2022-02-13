@@ -10,24 +10,30 @@ import (
 	"github.com/destructiqn/kogtevran/protocol"
 )
 
+type TunnelPair struct {
+	SessionID string
+	Auxiliary *AuxiliaryChannel
+	Primary   *MinecraftTunnel
+}
+
 var CurrentTunnelPool = &TunnelPool{
-	pool: make(map[string]*MinecraftTunnel),
+	pool: make(map[string]*TunnelPair),
 }
 
 type TunnelPool struct {
-	pool  map[string]*MinecraftTunnel
+	pool  map[string]*TunnelPair
 	mutex sync.Mutex
 }
 
-func (p *TunnelPool) RegisterTunnel(sessionID string, tunnel *MinecraftTunnel) {
+func (p *TunnelPool) RegisterPair(sessionID string, pair *TunnelPair) {
 	p.mutex.Lock()
-	p.pool[sessionID] = tunnel
+	p.pool[sessionID] = pair
 	p.mutex.Unlock()
-	tunnel.SessionID = sessionID
+	pair.SessionID = sessionID
 }
 
-func (p *TunnelPool) UnregisterTunnel(sessionID string) {
-	tunnel, ok := p.GetTunnel(sessionID)
+func (p *TunnelPool) UnregisterPair(sessionID string) {
+	tunnel, ok := p.GetPair(sessionID)
 	if !ok {
 		return
 	}
@@ -37,18 +43,17 @@ func (p *TunnelPool) UnregisterTunnel(sessionID string) {
 	p.mutex.Unlock()
 
 	tunnel.SessionID = ""
-	tunnel.AuxiliaryChannel.Conn.Close()
+	tunnel.Auxiliary.Conn.Close()
 }
 
-func (p *TunnelPool) GetTunnel(sessionID string) (*MinecraftTunnel, bool) {
+func (p *TunnelPool) GetPair(sessionID string) (*TunnelPair, bool) {
 	tunnel, ok := p.pool[sessionID]
 	return tunnel, ok
 }
 
 type MinecraftTunnel struct {
-	SessionID                 string
-	AuxiliaryChannel          *AuxiliaryChannel
-	AuxiliaryChannelAvailable chan bool
+	SessionID  string
+	TunnelPair *TunnelPair
 
 	Closed bool
 	Server *net.Conn
@@ -127,16 +132,15 @@ func (t *MinecraftTunnel) Close() {
 	t.Closed = true
 	_ = t.Server.Close()
 	_ = t.Client.Close()
-	CurrentTunnelPool.UnregisterTunnel(t.SessionID)
+	CurrentTunnelPool.UnregisterPair(t.SessionID)
 }
 
 func WrapConn(server, client *net.Conn) *MinecraftTunnel {
 	tunnel := &MinecraftTunnel{
-		Server:                    server,
-		Client:                    client,
-		AuxiliaryChannelAvailable: make(chan bool),
-		EnableEncryptionS2C:       make(chan []byte),
-		EnableEncryptionC2S:       make(chan [][]byte),
+		Server:              server,
+		Client:              client,
+		EnableEncryptionS2C: make(chan []byte),
+		EnableEncryptionC2S: make(chan [][]byte),
 	}
 
 	tunnel.InventoryHandler = NewInventoryHandler()
