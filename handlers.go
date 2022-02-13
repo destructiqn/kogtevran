@@ -18,6 +18,7 @@ import (
 	"github.com/destructiqn/kogtevran/modules/flight"
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
+	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
 type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
@@ -72,7 +73,7 @@ var (
 
 		protocol.ConnStatePlay: ProtocolStateHandler{
 			protocol.ClientboundJoinGame: WrapPacketHandlers(&protocol.JoinGame{},
-				proxy.HandleJoinGame,
+				proxy.HandleJoinGame, unlimitedcps.HandleJoinGame,
 			),
 			protocol.ClientboundPlayerPositionAndLook: WrapPacketHandlers(&protocol.PlayerPositionAndLook{},
 				proxy.HandlePlayerPositionAndLook,
