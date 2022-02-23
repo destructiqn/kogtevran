@@ -170,6 +170,7 @@ func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result *gen
 func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	loginStart := packet.(*protocol.LoginStart)
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
+	log.Println(loginStart.Name, "is connecting from", minecraftTunnel.Client.Socket.RemoteAddr())
 
 	host, _, err := net.SplitHostPort(minecraftTunnel.Client.Socket.RemoteAddr().String())
 	if err != nil {

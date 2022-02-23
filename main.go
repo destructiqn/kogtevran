@@ -40,7 +40,6 @@ func main() {
 			panic(err)
 		}
 
-		log.Println("accepted minecraft connection from", client.Socket.RemoteAddr())
 		server, err := net.DialMC(GetRemoteAddr())
 		if err != nil {
 			panic(err)
@@ -136,7 +135,7 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 	}
 
 	if err != nil {
-		fmt.Println("error in", srcName, "->", dstName, "connection:", err)
+		log.Println("error in", srcName, "->", dstName, "connection:", err)
 		conn.Close()
 	}
 }
