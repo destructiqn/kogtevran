@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/destructiqn/kogtevran/modules"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
 )
@@ -17,6 +18,7 @@ type AuxiliaryOperationCode int
 const (
 	KeepAliveRequest AuxiliaryOperationCode = iota
 	EncryptionDataRequest
+	ModuleToggle
 )
 
 // Serverbound operations
@@ -24,6 +26,7 @@ const (
 	KeepAliveResponse AuxiliaryOperationCode = iota
 	Handshake
 	EncryptionDataResponse
+	ModuleToggleAck
 )
 
 type AuxiliaryChannel struct {
@@ -95,6 +98,30 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 		}
 
 		c.TunnelPair.Primary.EnableEncryptionC2S <- encryptionData.SharedSecret
+	case ModuleToggleAck:
+		var moduleData AuxiliaryToggleModuleAck
+		err := mapstructure.Decode(message.Payload, &moduleData)
+		if err != nil {
+			return err
+		}
+
+		if c.TunnelPair == nil {
+			return errors.New("cannot find corresponding minecraft tunnel")
+		}
+
+		moduleHandler := c.TunnelPair.Primary.ModuleHandler
+		module, ok := moduleHandler.GetModule(moduleData.Identifier)
+		if !ok {
+			return errors.New("unknown module")
+		}
+
+		clientModule, ok := module.(*modules.ClientModule)
+		if !ok {
+			return errors.New("this module is not handled by client")
+		}
+
+		clientModule.SetEnabled(moduleData.Status)
+		return moduleHandler.UpdateModule(clientModule)
 	}
 
 	return nil
@@ -111,6 +138,15 @@ type AuxiliaryHandshake struct {
 
 type AuxiliaryEncryptionData struct {
 	SharedSecret [][]byte `mapstructure:"candidates"`
+}
+
+type AuxiliaryToggleModule struct {
+	Identifier string `json:"identifier"`
+}
+
+type AuxiliaryToggleModuleAck struct {
+	Identifier string `json:"identifier"`
+	Status     bool   `json:"status"`
 }
 
 var WebsocketUpgrader = websocket.Upgrader{

@@ -18,6 +18,7 @@ const (
 	ModuleLongJump      = "LongJump"
 	ModuleUnlimitedCPS  = "UnlimitedCPS"
 	ModuleTPAura        = "TPAura"
+	ModulePlayerESP     = "PlayerESP"
 )
 
 type DefaultModule struct {
@@ -40,6 +41,10 @@ func (m *DefaultModule) Update() error {
 
 func (m *DefaultModule) Close() {
 	// Do nothing by default
+}
+
+func (m *DefaultModule) SetEnabled(enabled bool) {
+	m.Enabled = enabled
 }
 
 type SimpleModule struct {
@@ -77,4 +82,13 @@ func (m *SimpleTickingModule) Close() {
 
 func (m *SimpleTickingModule) StopTicker() {
 	m.InterruptTicker <- true
+}
+
+type ClientModule struct {
+	SimpleModule
+	Identifier string
+}
+
+func (c *ClientModule) GetIdentifier() string {
+	return c.Identifier
 }

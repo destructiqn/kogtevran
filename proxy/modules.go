@@ -29,9 +29,9 @@ func NewModuleHandler(tunnel *MinecraftTunnel) *ModuleHandler {
 	return &ModuleHandler{tunnel, make(map[string]generic.Module)}
 }
 
-func (t *ModuleHandler) RegisterModule(module generic.Module) {
-	module.Register(t.tunnel)
-	t.modules[module.GetIdentifier()] = module
+func (m *ModuleHandler) RegisterModule(module generic.Module) {
+	module.Register(m.tunnel)
+	m.modules[module.GetIdentifier()] = module
 
 	tickingModule, isTicking := module.(generic.TickingModule)
 	if isTicking {
@@ -69,21 +69,21 @@ func (m ModuleList) Swap(i, j int) {
 	m[i], m[j] = m[j], m[i]
 }
 
-func (t *ModuleHandler) GetModules() []generic.Module {
+func (m *ModuleHandler) GetModules() []generic.Module {
 	aModules := make([]generic.Module, 0)
-	for _, module := range t.modules {
+	for _, module := range m.modules {
 		aModules = append(aModules, module)
 	}
 	return aModules
 }
 
-func (t *ModuleHandler) GetModule(identifier string) (generic.Module, bool) {
-	module, ok := t.modules[identifier]
+func (m *ModuleHandler) GetModule(identifier string) (generic.Module, bool) {
+	module, ok := m.modules[identifier]
 	return module, ok
 }
 
-func (t *ModuleHandler) IsModuleEnabled(moduleID string) bool {
-	module, ok := t.modules[moduleID]
+func (m *ModuleHandler) IsModuleEnabled(moduleID string) bool {
+	module, ok := m.modules[moduleID]
 	if !ok {
 		return false
 	}
@@ -91,31 +91,38 @@ func (t *ModuleHandler) IsModuleEnabled(moduleID string) bool {
 	return module.IsEnabled()
 }
 
-func (t *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
-	value, err := module.Toggle()
-	if err != nil {
-		return value, err
+func (m *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
+	if _, ok := module.(*modules.ClientModule); !ok {
+		value, err := module.Toggle()
+		if err != nil {
+			return value, err
+		}
+	} else {
+		auxiliary := m.tunnel.TunnelPair.Auxiliary
+		err := auxiliary.SendMessage(ModuleToggle, AuxiliaryToggleModule{module.GetIdentifier()})
+		if err != nil {
+			return module.IsEnabled(), err
+		}
 	}
 
-	err = t.tunnel.GetTexteriaHandler().UpdateInterface()
-	if err != nil {
-		return value, err
-	}
-
-	err = module.Update()
-	if err != nil {
-		return value, err
-	}
-
-	return value, nil
+	return module.IsEnabled(), nil
 }
 
-func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
+func (m *ModuleHandler) UpdateModule(module generic.Module) error {
+	err := m.tunnel.GetTexteriaHandler().UpdateInterface()
+	if err != nil {
+		return err
+	}
+
+	return module.Update()
+}
+
+func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 	modulesDisplay := make([]string, 0)
 	modulesControls := make([]map[string]interface{}, 0)
 
 	x, y := 10, 20
-	modulesList := ModuleList(t.GetModules())
+	modulesList := ModuleList(m.GetModules())
 	sort.Sort(modulesList)
 
 	for _, module := range modulesList {
@@ -196,11 +203,7 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 		SimpleTickingModule: modules.SimpleTickingModule{Interval: 35 * time.Millisecond},
 	}
 
-	tpAura := tpaura.TPAura{
-		SimpleTickingModule: modules.SimpleTickingModule{Interval: 250 * time.Millisecond},
-		SearchRadius:        20,
-		TeleportRadius:      4,
-	}
+	tpAuraTicking := modules.SimpleTickingModule{Interval: 250 * time.Millisecond}
 
 	moduleHandler.RegisterModule(&flight.Flight{Speed: 3})
 	moduleHandler.RegisterModule(&antiknockback.AntiKnockback{})
@@ -211,5 +214,6 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
 	moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
 	moduleHandler.RegisterModule(&unlimitedcps.UnlimitedCPS{})
-	moduleHandler.RegisterModule(&tpAura)
+	moduleHandler.RegisterModule(&tpaura.TPAura{SearchRadius: 20, TeleportRadius: 4, SimpleTickingModule: tpAuraTicking})
+	moduleHandler.RegisterModule(&modules.ClientModule{Identifier: modules.ModulePlayerESP})
 }

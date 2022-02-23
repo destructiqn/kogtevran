@@ -7,6 +7,7 @@ type Module interface {
 	GetIdentifier() string
 	Toggle() (bool, error)
 	IsEnabled() bool
+	SetEnabled(enabled bool)
 	Update() error
 	Close()
 }
