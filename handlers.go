@@ -190,6 +190,7 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
 	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
 
+	log.Println("linked minecraft connection for", loginStart.Name, "with auxiliary connection from", tunnelPair.Auxiliary.Conn.RemoteAddr())
 	return generic.PassPacket(), nil
 }
 

@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -41,6 +40,7 @@ func main() {
 			panic(err)
 		}
 
+		log.Println("accepted minecraft connection from", client.Socket.RemoteAddr())
 		server, err := net.DialMC(GetRemoteAddr())
 		if err != nil {
 			panic(err)
@@ -72,7 +72,6 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 	direction := fmt.Sprintf("%s -> %s", srcName, dstName)
 	var packets int
 	var err error
-	var lastPacket *pk.Packet
 	for {
 		var packet pk.Packet
 		err = src.ReadPacket(&packet)
@@ -134,21 +133,11 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 
 			packets++
 		}
-
-		if packet.ID != protocol.ClientboundDisconnect {
-			lastPacket = &packet
-		}
 	}
 
 	if err != nil {
 		fmt.Println("error in", srcName, "->", dstName, "connection:", err)
 		conn.Close()
-	}
-
-	if lastPacket != nil {
-		fmt.Println("total packets handled:", packets)
-		fmt.Println("last packet was", protocol.FormatPacket(lastPacket.ID, typ), "")
-		fmt.Println(fmt.Sprintf("last packet dump:\n%s", hex.Dump(lastPacket.Data)))
 	}
 }
 
