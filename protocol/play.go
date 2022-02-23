@@ -224,6 +224,19 @@ func (e *EntityTeleport) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundEntityTeleport, e.EntityID, e.X, e.Y, e.Z, e.Yaw, e.Pitch, e.OnGround)
 }
 
+type ChangeGameState struct {
+	Reason pk.UnsignedByte
+	Value  pk.Float
+}
+
+func (c *ChangeGameState) Read(packet pk.Packet) error {
+	return packet.Scan(&c.Reason, &c.Value)
+}
+
+func (c *ChangeGameState) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundChangeGameState, c.Reason, c.Value)
+}
+
 type OpenWindow struct {
 	WindowID      pk.UnsignedByte
 	WindowType    pk.String
