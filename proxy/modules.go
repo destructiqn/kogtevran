@@ -8,6 +8,7 @@ import (
 
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/modules"
+
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
 	"github.com/destructiqn/kogtevran/modules/aura"
 	"github.com/destructiqn/kogtevran/modules/cmdcam"
@@ -15,6 +16,7 @@ import (
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
 	"github.com/destructiqn/kogtevran/modules/spammer"
+	"github.com/destructiqn/kogtevran/modules/tpaura"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
@@ -125,7 +127,7 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			"h":     20,
 			"t":     module.GetIdentifier(),
 			"tc":    0xAAAAAA,
-			"hc":	 0x5555FF,
+			"hc":    0x5555FF,
 			"x":     x,
 			"y":     y,
 			"color": -0x33000000,
@@ -194,6 +196,12 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 		SimpleTickingModule: modules.SimpleTickingModule{Interval: 35 * time.Millisecond},
 	}
 
+	tpAura := tpaura.TPAura{
+		SimpleTickingModule: modules.SimpleTickingModule{Interval: 250 * time.Millisecond},
+		SearchRadius:        20,
+		TeleportRadius:      4,
+	}
+
 	moduleHandler.RegisterModule(&flight.Flight{Speed: 3})
 	moduleHandler.RegisterModule(&antiknockback.AntiKnockback{})
 	moduleHandler.RegisterModule(&nofall.NoFall{})
@@ -203,4 +211,5 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
 	moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
 	moduleHandler.RegisterModule(&unlimitedcps.UnlimitedCPS{})
+	moduleHandler.RegisterModule(&tpAura)
 }

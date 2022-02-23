@@ -9,12 +9,13 @@ import (
 )
 
 type EntityHandler struct {
+	tunnel   *MinecraftTunnel
 	Entities map[int]minecraft.Entity
 	sync.Mutex
 }
 
-func NewEntityHandler() *EntityHandler {
-	return &EntityHandler{Entities: make(map[int]minecraft.Entity)}
+func NewEntityHandler(tunnel *MinecraftTunnel) *EntityHandler {
+	return &EntityHandler{tunnel: tunnel, Entities: make(map[int]minecraft.Entity)}
 }
 
 func (h *EntityHandler) GetEntities() map[int]minecraft.Entity {
@@ -27,6 +28,10 @@ func (h *EntityHandler) GetEntity(entityID int) (minecraft.Entity, bool) {
 }
 
 func (h *EntityHandler) InitPlayer(entityID int, player *minecraft.Player) {
+	if h.tunnel.GetPlayerHandler().GetEntityID() == int32(entityID) {
+		return
+	}
+
 	h.Lock()
 	h.Entities[entityID] = player
 	h.Unlock()

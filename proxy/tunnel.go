@@ -150,7 +150,7 @@ func WrapConn(server, client *net.Conn) *MinecraftTunnel {
 	tunnel.InventoryHandler = NewInventoryHandler()
 	tunnel.TexteriaHandler = NewTexteriaHandler(tunnel)
 	tunnel.ModuleHandler = NewModuleHandler(tunnel)
-	tunnel.EntityHandler = NewEntityHandler()
+	tunnel.EntityHandler = NewEntityHandler(tunnel)
 	tunnel.PlayerHandler = NewPlayerHandler(tunnel)
 	tunnel.ChatHandler = NewChatHandler(tunnel)
 
