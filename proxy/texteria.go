@@ -118,18 +118,11 @@ func (t *TexteriaHandler) SendClient(data ...map[string]interface{}) error {
 }
 
 func (t *TexteriaHandler) InterceptAction(data map[string]interface{}) bool {
-	modified := false
-
 	if data["%"] == "reset" {
 		t.initialized = false
 	}
 
-	if id, ok := data["id"]; ok && id == "vn.n" {
-		data["text"] = []string{fmt.Sprintf("%s §r(§8%8s§r)", data["text"].([]string)[0], t.tunnel.SessionID)}
-		modified = true
-	}
-
-	return modified
+	return false
 }
 
 func GetBranding() []map[string]interface{} {

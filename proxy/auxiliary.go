@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -67,12 +68,21 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 		}
 
 		pair := &TunnelPair{
-			SessionID: handshake.SessionID,
 			Auxiliary: c,
 		}
 
+		host, _, err := net.SplitHostPort(c.Conn.RemoteAddr().String())
+		if err != nil {
+			return err
+		}
+
+		id := TunnelPairID{
+			Username:   handshake.Username,
+			RemoteAddr: host,
+		}
+
 		c.TunnelPair = pair
-		CurrentTunnelPool.RegisterPair(handshake.SessionID, pair)
+		CurrentTunnelPool.RegisterPair(id, pair)
 	case EncryptionDataResponse:
 		var encryptionData AuxiliaryEncryptionData
 		err := mapstructure.Decode(message.Payload, &encryptionData)
@@ -96,7 +106,7 @@ type WebsocketMessage struct {
 }
 
 type AuxiliaryHandshake struct {
-	SessionID string `mapstructure:"sessionID"`
+	Username string `json:"username"`
 }
 
 type AuxiliaryEncryptionData struct {

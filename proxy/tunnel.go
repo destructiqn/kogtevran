@@ -16,43 +16,47 @@ type TunnelPair struct {
 	Primary   *MinecraftTunnel
 }
 
+type TunnelPairID struct {
+	Username   string
+	RemoteAddr string
+}
+
 var CurrentTunnelPool = &TunnelPool{
-	pool: make(map[string]*TunnelPair),
+	pool: make(map[TunnelPairID]*TunnelPair),
 }
 
 type TunnelPool struct {
-	pool  map[string]*TunnelPair
+	pool  map[TunnelPairID]*TunnelPair
 	mutex sync.Mutex
 }
 
-func (p *TunnelPool) RegisterPair(sessionID string, pair *TunnelPair) {
+func (p *TunnelPool) RegisterPair(id TunnelPairID, pair *TunnelPair) {
 	p.mutex.Lock()
-	p.pool[sessionID] = pair
+	p.pool[id] = pair
 	p.mutex.Unlock()
-	pair.SessionID = sessionID
 }
 
-func (p *TunnelPool) UnregisterPair(sessionID string) {
-	tunnel, ok := p.GetPair(sessionID)
+func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
+	tunnel, ok := p.GetPair(id)
 	if !ok {
 		return
 	}
 
 	p.mutex.Lock()
-	delete(p.pool, sessionID)
+	delete(p.pool, id)
 	p.mutex.Unlock()
 
 	tunnel.SessionID = ""
 	tunnel.Auxiliary.Conn.Close()
 }
 
-func (p *TunnelPool) GetPair(sessionID string) (*TunnelPair, bool) {
-	tunnel, ok := p.pool[sessionID]
+func (p *TunnelPool) GetPair(id TunnelPairID) (*TunnelPair, bool) {
+	tunnel, ok := p.pool[id]
 	return tunnel, ok
 }
 
 type MinecraftTunnel struct {
-	SessionID  string
+	PairID     TunnelPairID
 	TunnelPair *TunnelPair
 
 	Closed bool
@@ -132,7 +136,7 @@ func (t *MinecraftTunnel) Close() {
 	t.Closed = true
 	_ = t.Server.Close()
 	_ = t.Client.Close()
-	CurrentTunnelPool.UnregisterPair(t.SessionID)
+	CurrentTunnelPool.UnregisterPair(t.PairID)
 }
 
 func WrapConn(server, client *net.Conn) *MinecraftTunnel {

@@ -3,21 +3,18 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
-	"net"
-	"strconv"
-	"strings"
-
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
-	"github.com/destructiqn/kogtevran/proxy"
-
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
 	"github.com/destructiqn/kogtevran/modules/flight"
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/destructiqn/kogtevran/proxy"
+	"log"
+	"net"
+	"strconv"
 )
 
 type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
@@ -35,6 +32,7 @@ var (
 		},
 
 		protocol.ConnStateLogin: ProtocolStateHandler{
+			protocol.ServerboundLoginStart:         WrapPacketHandlers(&protocol.LoginStart{}, HandleLoginStart),
 			protocol.ServerboundEncryptionResponse: WrapPacketHandlers(&protocol.EncryptionResponse{}, HandleEncryptionResponse),
 		},
 
@@ -150,16 +148,6 @@ func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result pk.P
 		tunnel.SetState(protocol.ConnStateLogin)
 	}
 
-	sessionID := strings.Split(string(handshake.ServerAddress), ".")[0]
-	tunnelPair, ok := proxy.CurrentTunnelPool.GetPair(sessionID)
-	if !ok {
-		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("unknown session"))
-		return pk.Packet{}, false, nil
-	}
-
-	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
-	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
-
 	host, sPort, err := net.SplitHostPort(tunnel.(*proxy.MinecraftTunnel).Server.Socket.RemoteAddr().String())
 	if err != nil {
 		return
@@ -174,6 +162,32 @@ func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result pk.P
 	handshake.ServerPort = pk.UnsignedShort(port)
 
 	return handshake.Marshal(), true, nil
+}
+
+func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+	loginStart := packet.(*protocol.LoginStart)
+	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
+
+	host, _, err := net.SplitHostPort(minecraftTunnel.Client.Socket.RemoteAddr().String())
+	if err != nil {
+		return
+	}
+
+	id := proxy.TunnelPairID{
+		Username:   string(loginStart.Name),
+		RemoteAddr: host,
+	}
+
+	tunnelPair, ok := proxy.CurrentTunnelPool.GetPair(id)
+	if !ok {
+		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("unknown session"))
+		return pk.Packet{}, false, nil
+	}
+
+	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
+	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
+
+	return packet.Marshal(), true, nil
 }
 
 func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
