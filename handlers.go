@@ -3,18 +3,21 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"net"
+	"strconv"
+
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
+	pk "github.com/destructiqn/kogtevran/net/packet"
+	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/destructiqn/kogtevran/proxy"
+
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
 	"github.com/destructiqn/kogtevran/modules/flight"
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
-	"github.com/destructiqn/kogtevran/proxy"
-	"log"
-	"net"
-	"strconv"
+	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
 type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
@@ -70,7 +73,7 @@ var (
 
 		protocol.ConnStatePlay: ProtocolStateHandler{
 			protocol.ClientboundJoinGame: WrapPacketHandlers(&protocol.JoinGame{},
-				proxy.HandleJoinGame,
+				proxy.HandleJoinGame, unlimitedcps.HandleJoinGame,
 			),
 			protocol.ClientboundPlayerPositionAndLook: WrapPacketHandlers(&protocol.PlayerPositionAndLook{},
 				proxy.HandlePlayerPositionAndLook,

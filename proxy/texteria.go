@@ -3,6 +3,7 @@ package proxy
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/destructiqn/kogtevran/generic"
 	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
@@ -197,14 +198,11 @@ func GetBranding() []map[string]interface{} {
 		},
 		{
 			"%":    "add",
-			"id":   "kv.mi",
+			"id":   "kv.mz",
 			"al":   "RIGHT",
 			"pos":  "TOP_RIGHT",
 			"type": "Text",
-			"text": []string{
-				fmt.Sprintf("§9Kogtevran §7%s", generic.GetRevision()),
-				"§7vk.com§9/destructiqn",
-			},
+			"text": []string{fmt.Sprintf("§9Kogtevran §7%s", generic.GetRevision())},
 
 			"vis": []map[string]interface{}{
 				{
@@ -214,6 +212,24 @@ func GetBranding() []map[string]interface{} {
 				{
 					"type": "f3",
 					"show": false,
+				},
+			},
+
+			"x": 2,
+			"y": 2,
+		},
+		{
+			"%":    "add",
+			"id":   "kv.mi",
+			"al":   "RIGHT",
+			"pos":  "BOTTOM_RIGHT",
+			"type": "Text",
+			"text": []string{"§7vk.com§9/destructiqn"},
+
+			"vis": []map[string]interface{}{
+				{
+					"type": "always",
+					"show": true,
 				},
 			},
 

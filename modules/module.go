@@ -16,6 +16,7 @@ const (
 	ModuleChestStealer  = "ChestStealer"
 	ModuleCMDCam        = "CMDCam"
 	ModuleLongJump      = "LongJump"
+	ModuleUnlimitedCPS	= "UnlimitedCPS"
 )
 
 type DefaultModule struct {

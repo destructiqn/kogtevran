@@ -15,6 +15,7 @@ import (
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
 	"github.com/destructiqn/kogtevran/modules/spammer"
+	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
 type ModuleHandler struct {
@@ -123,10 +124,11 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			"w":     85,
 			"h":     20,
 			"t":     module.GetIdentifier(),
-			"tc":    0xFFFFFF,
+			"tc":    0xAAAAAA,
+			"hc":	 0x5555FF,
 			"x":     x,
 			"y":     y,
-			"color": -0x22BBBB,
+			"color": -0x33000000,
 			"click": map[string]interface{}{
 				"act":  "CHAT",
 				"data": fmt.Sprintf("/toggle %s", module.GetIdentifier()),
@@ -143,7 +145,8 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 
 		if module.IsEnabled() {
 			modulesDisplay = append(modulesDisplay, module.GetIdentifier())
-			control["color"] = -0xBB22BB
+			control["tc"] = 0xFFFFFF
+			control["color"] = -0xABAB01
 		}
 	}
 
@@ -168,7 +171,7 @@ func (t *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			},
 
 			"x": 2,
-			"y": 24,
+			"y": 12,
 		},
 		{
 			"%": "add:group",
@@ -188,10 +191,10 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 
 	genericAura := aura.GenericAura{
 		MaxDistance: 7, HitAnimation: false,
-		SimpleTickingModule: modules.SimpleTickingModule{Interval: 50 * time.Millisecond},
+		SimpleTickingModule: modules.SimpleTickingModule{Interval: 35 * time.Millisecond},
 	}
 
-	moduleHandler.RegisterModule(&flight.Flight{Speed: 1})
+	moduleHandler.RegisterModule(&flight.Flight{Speed: 3})
 	moduleHandler.RegisterModule(&antiknockback.AntiKnockback{})
 	moduleHandler.RegisterModule(&nofall.NoFall{})
 	moduleHandler.RegisterModule(&aura.KillAura{GenericAura: genericAura})
@@ -199,4 +202,5 @@ func RegisterDefaultModules(tunnel generic.Tunnel) {
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
 	moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
+	moduleHandler.RegisterModule(&unlimitedcps.UnlimitedCPS{})
 }
