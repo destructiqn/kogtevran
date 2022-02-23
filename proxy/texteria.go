@@ -231,6 +231,10 @@ func GetBranding() []map[string]interface{} {
 					"type": "always",
 					"show": true,
 				},
+				{
+					"type": "chat",
+					"show": false,
+				},
 			},
 
 			"x": 2,
