@@ -101,17 +101,17 @@ func (w *Window) GetItem(slot int) pk.Slot {
 	return w.items[slot]
 }
 
-func HandleOpenWindow(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleOpenWindow(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	openWindow := packet.(*protocol.OpenWindow)
 
 	tunnel.GetInventoryHandler().OpenWindow(int(openWindow.WindowID), NewWindow(
 		int(openWindow.NumberOfSlots), string(openWindow.WindowType), openWindow.WindowTitle),
 	)
 
-	return openWindow.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleCloseWindow(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleCloseWindow(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	switch packet.(type) {
 	case *protocol.ServerCloseWindow:
 		closeWindow := packet.(*protocol.ServerCloseWindow)
@@ -121,20 +121,20 @@ func HandleCloseWindow(packet protocol.Packet, tunnel generic.Tunnel) (result pk
 		tunnel.GetInventoryHandler().CloseWindow(int(closeWindow.WindowID))
 	}
 
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleSetSlot(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleSetSlot(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	setSlot := packet.(*protocol.SetSlot)
 	window, ok := tunnel.GetInventoryHandler().GetWindow(int(setSlot.WindowID))
 	if ok {
 		window.PutItem(int(setSlot.Slot), setSlot.SlotData)
 	}
 
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleWindowItems(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleWindowItems(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	windowItems := packet.(*protocol.WindowItems)
 	window, ok := tunnel.GetInventoryHandler().GetWindow(int(windowItems.WindowID))
 	if ok {
@@ -143,5 +143,5 @@ func HandleWindowItems(packet protocol.Packet, tunnel generic.Tunnel) (result pk
 		}
 	}
 
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }

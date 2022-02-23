@@ -99,16 +99,23 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 		next := true
 		if stateHandler, ok := stateHandlerPool[conn.State]; ok {
 			if handler, ok := stateHandler[packet.ID]; ok {
-				hPacket, hNext, err := handler(wrappedPacket, conn)
-				next = hNext
+				result, err := handler(wrappedPacket, conn)
 				if err != nil {
 					log.Println(direction, "error handling packet", protocol.FormatPacket(packet.ID, typ), err)
 					next = true
 					continue
 				}
 
-				if len(hPacket.Data) > 0 {
-					packet = hPacket
+				if result == nil {
+					continue
+				}
+
+				if result.IsModified {
+					packet = result.Packet
+				}
+
+				if next {
+					next = result.ShouldPass
 				}
 			}
 		}

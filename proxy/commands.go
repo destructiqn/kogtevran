@@ -175,8 +175,13 @@ func HandleCommand(message string, tunnel generic.Tunnel) bool {
 	return true
 }
 
-func HandleChatMessage(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleChatMessage(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	chatMessage := packet.(*protocol.ChatMessage)
 	handled := HandleCommand(string(chatMessage.Message), tunnel)
-	return packet.Marshal(), !handled, nil
+
+	if handled {
+		return generic.RejectPacket(), nil
+	} else {
+		return generic.PassPacket(), nil
+	}
 }

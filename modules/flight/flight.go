@@ -40,7 +40,7 @@ func (f *Flight) Update() error {
 	return f.Tunnel.WriteClient(pk.Marshal(protocol.ClientboundPlayerAbilities, pk.Byte(flags), pk.Float(0.05*f.Speed), pk.Float(0.1)))
 }
 
-func HandlePlayerAbilities(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerAbilities(_ protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleFlight) {
 		go func(conn generic.Tunnel) {
 			time.Sleep(100 * time.Millisecond)
@@ -49,5 +49,5 @@ func HandlePlayerAbilities(packet protocol.Packet, tunnel generic.Tunnel) (resul
 		}(tunnel)
 	}
 
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }

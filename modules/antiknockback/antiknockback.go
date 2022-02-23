@@ -16,7 +16,7 @@ func (a *AntiKnockback) GetIdentifier() string {
 	return modules.ModuleAntiKnockback
 }
 
-func HandleEntityVelocity(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleEntityVelocity(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	entityVelocity := packet.(*protocol.EntityVelocity)
 	moduleHandler := tunnel.GetModuleHandler()
 
@@ -29,5 +29,5 @@ func HandleEntityVelocity(packet protocol.Packet, tunnel generic.Tunnel) (result
 		entityVelocity.VZ = pk.Short(antiKnockback.Z)
 	}
 
-	return entityVelocity.Marshal(), true, nil
+	return generic.ModifyPacket(entityVelocity.Marshal()), nil
 }

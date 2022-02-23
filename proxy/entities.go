@@ -5,7 +5,6 @@ import (
 
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/minecraft"
-	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
 )
 
@@ -76,7 +75,7 @@ func (h *EntityHandler) DestroyEntities(entityIDs []int) {
 	h.Unlock()
 }
 
-func HandleSpawnPlayer(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleSpawnPlayer(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	spawnPlayer := packet.(*protocol.SpawnPlayer)
 
 	player := &minecraft.Player{
@@ -90,10 +89,10 @@ func HandleSpawnPlayer(packet protocol.Packet, tunnel generic.Tunnel) (result pk
 	}
 
 	tunnel.GetEntityHandler().InitPlayer(int(spawnPlayer.EntityID), player)
-	return pk.Packet{}, true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleSpawnMob(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleSpawnMob(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	spawnMob := packet.(*protocol.SpawnMob)
 	mob := &minecraft.Mob{
 		DefaultEntity: minecraft.DefaultEntity{Location: &minecraft.Location{
@@ -107,10 +106,10 @@ func HandleSpawnMob(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 	}
 
 	tunnel.GetEntityHandler().InitMob(int(spawnMob.EntityID), mob)
-	return pk.Packet{}, true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleDestroyEntities(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleDestroyEntities(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	destroyEntities := packet.(*protocol.DestroyEntities)
 	entityIDs := make([]int, 0)
 	for _, entityID := range destroyEntities.EntityIDs {
@@ -118,27 +117,27 @@ func HandleDestroyEntities(packet protocol.Packet, tunnel generic.Tunnel) (resul
 	}
 
 	tunnel.GetEntityHandler().DestroyEntities(entityIDs)
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleEntityRelativeMove(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleEntityRelativeMove(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	entityRelativeMove := packet.(*protocol.EntityRelativeMove)
 	dx, dy, dz := entityRelativeMove.DX, entityRelativeMove.DY, entityRelativeMove.DZ
 	tunnel.GetEntityHandler().EntityRelativeMove(int(entityRelativeMove.EntityID), float64(dx)/32, float64(dy)/32, float64(dz)/32)
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleEntityLookAndRelativeMove(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleEntityLookAndRelativeMove(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	entityLookAndRelativeMove := packet.(*protocol.EntityLookAndRelativeMove)
 	dx, dy, dz := entityLookAndRelativeMove.DX, entityLookAndRelativeMove.DY, entityLookAndRelativeMove.DZ
 	tunnel.GetEntityHandler().EntityRelativeMove(int(entityLookAndRelativeMove.EntityID), float64(dx)/32, float64(dy)/32, float64(dz)/32)
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleEntityTeleport(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleEntityTeleport(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	entityTeleport := packet.(*protocol.EntityTeleport)
 	x, y, z := entityTeleport.X, entityTeleport.Y, entityTeleport.Z
 	yaw, pitch := entityTeleport.Yaw, entityTeleport.Pitch
 	tunnel.GetEntityHandler().EntityTeleport(int(entityTeleport.EntityID), float64(x)/32, float64(y)/32, float64(z)/32, float64(yaw), float64(pitch))
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }

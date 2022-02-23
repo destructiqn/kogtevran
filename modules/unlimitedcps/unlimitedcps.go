@@ -5,7 +5,6 @@ import (
 
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/modules"
-	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
 )
 
@@ -30,7 +29,7 @@ func (u *UnlimitedCPS) Update() error {
 	})
 }
 
-func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleJoinGame(_ protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleUnlimitedCPS) {
 		go func(conn generic.Tunnel) {
 			time.Sleep(100 * time.Millisecond)
@@ -41,5 +40,5 @@ func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 		}(tunnel)
 	}
 
-	return packet.Marshal(), true, err
+	return generic.PassPacket(), nil
 }

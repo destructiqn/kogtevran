@@ -20,8 +20,8 @@ import (
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
-type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error)
-type PacketHandler func(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error)
+type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result *generic.HandlerResult, err error)
+type PacketHandler func(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error)
 type ProtocolStateHandler map[int32]RawPacketHandler
 type ProtocolStateHandlerPool map[protocol.ConnectionState]ProtocolStateHandler
 type PluginMessageHandler func(data []byte, tunnel generic.Tunnel) (result []byte, next bool, err error)
@@ -125,14 +125,14 @@ var (
 )
 
 func WrapPacketHandlers(packet protocol.Packet, handlers ...PacketHandler) RawPacketHandler {
-	return func(rawPacket *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result pk.Packet, next bool, err error) {
+	return func(rawPacket *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result *generic.HandlerResult, err error) {
 		err = packet.Read(rawPacket.Packet)
 		if err != nil {
 			return
 		}
 
 		for _, handler := range handlers {
-			result, next, err = handler(packet, tunnel)
+			result, err = handler(packet, tunnel)
 			if err != nil {
 				return
 			}
@@ -142,7 +142,7 @@ func WrapPacketHandlers(packet protocol.Packet, handlers ...PacketHandler) RawPa
 	}
 }
 
-func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	handshake := packet.(*protocol.Handshake)
 	switch handshake.NextState {
 	case 1:
@@ -164,10 +164,10 @@ func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result pk.P
 	handshake.ServerAddress = pk.String(fmt.Sprintf("%s ", host))
 	handshake.ServerPort = pk.UnsignedShort(port)
 
-	return handshake.Marshal(), true, nil
+	return generic.ModifyPacket(handshake.Marshal()), nil
 }
 
-func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	loginStart := packet.(*protocol.LoginStart)
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
 
@@ -184,21 +184,21 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result pk.
 	tunnelPair, ok := proxy.CurrentTunnelPool.GetPair(id)
 	if !ok {
 		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("unknown session"))
-		return pk.Packet{}, false, nil
+		return generic.RejectPacket(), nil
 	}
 
 	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
 	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
 
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
 	encryptionRequest := packet.(*protocol.EncryptionRequest)
+
 	err = tunnel.WriteClient(encryptionRequest.Marshal())
 	if err != nil {
-		next = true
 		return
 	}
 
@@ -213,7 +213,7 @@ func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (res
 	return
 }
 
-func HandleEncryptionResponse(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleEncryptionResponse(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
 	encryptionResponse := packet.(*protocol.EncryptionResponse)
 	candidates := <-minecraftTunnel.EnableEncryptionC2S
@@ -256,19 +256,19 @@ func HandleEncryptionResponse(packet protocol.Packet, tunnel generic.Tunnel) (re
 	return
 }
 
-func HandleSetCompression(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleSetCompression(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
 	setCompression := packet.(*protocol.SetCompression)
 	minecraftTunnel.Server.SetThreshold(int(setCompression.Threshold))
-	return
+	return generic.RejectPacket(), nil
 }
 
-func HandleLoginSuccess(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleLoginSuccess(_ protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	tunnel.SetState(protocol.ConnStatePlay)
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleDisconnect(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleDisconnect(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	disconnect := packet.(*protocol.Disconnect)
 	log.Println("disconnected from server:", disconnect.Reason.String())
 	err = tunnel.WriteClient(packet.Marshal())
@@ -277,11 +277,11 @@ func HandleDisconnect(packet protocol.Packet, tunnel generic.Tunnel) (result pk.
 	}
 
 	tunnel.Close()
-	return
+	return generic.RejectPacket(), nil
 }
 
 func HandlePluginMessage(targetChannel string, handler PluginMessageHandler) PacketHandler {
-	return func(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+	return func(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 		var (
 			data     []byte
 			channel  string
@@ -300,11 +300,16 @@ func HandlePluginMessage(targetChannel string, handler PluginMessageHandler) Pac
 		}
 
 		if targetChannel == channel {
+			var next bool
 			data, next, err = handler(data, tunnel)
 			messageData := pk.PluginMessageData(data)
-			return pk.Marshal(packetID, pk.String(channel), &messageData), next, err
+			if next {
+				return generic.ModifyPacket(pk.Marshal(packetID, pk.String(channel), &messageData)), nil
+			} else {
+				return generic.RejectPacket(), nil
+			}
 		}
 
-		return packet.Marshal(), true, nil
+		return generic.PassPacket(), nil
 	}
 }

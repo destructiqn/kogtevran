@@ -3,7 +3,6 @@ package nofall
 import (
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/modules"
-	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
 )
 
@@ -15,40 +14,44 @@ func (n *NoFall) GetIdentifier() string {
 	return modules.ModuleNoFall
 }
 
-func HandlePlayer(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayer(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	player := packet.(*protocol.Player)
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleNoFall) {
 		player.OnGround = true
+		return generic.ModifyPacket(player.Marshal()), nil
 	}
-	return player.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPosition := packet.(*protocol.PlayerPosition)
 
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleNoFall) {
 		playerPosition.OnGround = true
+		return generic.ModifyPacket(playerPosition.Marshal()), nil
 	}
 
-	return playerPosition.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerLook := packet.(*protocol.PlayerLook)
 
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleNoFall) {
 		playerLook.OnGround = true
+		return generic.ModifyPacket(playerLook.Marshal()), nil
 	}
 
-	return playerLook.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPosition := packet.(*protocol.ServerPlayerPositionAndLook)
 
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleNoFall) {
 		playerPosition.OnGround = true
+		return generic.ModifyPacket(playerPosition.Marshal()), nil
 	}
 
-	return playerPosition.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }

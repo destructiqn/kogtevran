@@ -48,7 +48,7 @@ func (p *PlayerHandler) Attack(target int) error {
 	return p.tunnel.WriteServer(pk.Marshal(0x02, pk.VarInt(target), pk.VarInt(1)))
 }
 
-func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	joinGame := packet.(*protocol.JoinGame)
 	tunnel.GetPlayerHandler().(*PlayerHandler).entityID = int32(joinGame.EntityID)
 	tunnel.GetEntityHandler().(*EntityHandler).ResetEntities()
@@ -59,16 +59,16 @@ func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Pa
 		_ = tunnel.GetTexteriaHandler().UpdateInterface()
 	}()
 
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandlePlayer(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayer(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	player := packet.(*protocol.Player)
 	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(player.OnGround)
-	return player.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandlePlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPositionAndLook := packet.(*protocol.PlayerPositionAndLook)
 	flags := playerPositionAndLook.Flags
 	x, y, z := playerPositionAndLook.X, playerPositionAndLook.Y, playerPositionAndLook.Z
@@ -94,36 +94,36 @@ func HandlePlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) 
 	}
 
 	playerHandler.location.Yaw, playerHandler.location.Pitch = float64(yaw), float64(pitch)
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerLook(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerLook := packet.(*protocol.PlayerLook)
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.Yaw, location.Pitch = float64(playerLook.Yaw), float64(playerLook.Pitch)
 	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(playerLook.OnGround)
-	return playerLook.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPosition := packet.(*protocol.PlayerPosition)
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.X, location.Y, location.Z = float64(playerPosition.X), float64(playerPosition.Y), float64(playerPosition.Z)
 	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(playerPosition.OnGround)
-	return playerPosition.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPosition := packet.(*protocol.ServerPlayerPositionAndLook)
 	location := tunnel.GetPlayerHandler().GetLocation()
 	location.X, location.Y, location.Z = float64(playerPosition.X), float64(playerPosition.Y), float64(playerPosition.Z)
 	location.Yaw, location.Pitch = float64(playerPosition.Yaw), float64(playerPosition.Pitch)
 	tunnel.GetPlayerHandler().(*PlayerHandler).onGround = bool(playerPosition.OnGround)
-	return playerPosition.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleServerPlayerAbilities(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleServerPlayerAbilities(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerAbilities := packet.(*protocol.ServerPlayerAbilities)
 	tunnel.GetPlayerHandler().SetFlying(playerAbilities.Flags&0x02 > 0)
-	return packet.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }

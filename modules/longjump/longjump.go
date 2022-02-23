@@ -25,7 +25,7 @@ func (l *LongJump) Boost(yaw float64) (x int16, y int16, z int16) {
 	return
 }
 
-func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPosition := packet.(*protocol.PlayerPosition)
 
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleLongJump) {
@@ -35,10 +35,10 @@ func HandlePlayerPosition(packet protocol.Packet, tunnel generic.Tunnel) (result
 		}
 	}
 
-	return playerPosition.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
-func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result pk.Packet, next bool, err error) {
+func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerPosition := packet.(*protocol.ServerPlayerPositionAndLook)
 
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleLongJump) {
@@ -48,7 +48,7 @@ func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tu
 		}
 	}
 
-	return playerPosition.Marshal(), true, nil
+	return generic.PassPacket(), nil
 }
 
 func HandleJumpCandidate(onGround bool, y float64, tunnel generic.Tunnel) error {
