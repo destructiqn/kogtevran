@@ -3,12 +3,12 @@ package proxy
 import (
 	"errors"
 	"fmt"
-	"github.com/destructiqn/kogtevran/license"
 	"log"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/destructiqn/kogtevran/license"
 	"github.com/destructiqn/kogtevran/modules"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
@@ -36,12 +36,15 @@ const KeepAliveInterval = 20 * time.Second
 type AuxiliaryChannel struct {
 	Conn          *websocket.Conn
 	TunnelPair    *TunnelPair
-	lastKeepAlive time.Time
+	lastKeepAlive *time.Time
 	close         chan bool
 }
 
 func (c *AuxiliaryChannel) Close() error {
-	c.close <- true
+	go func() {
+		c.close <- true
+	}()
+
 	return c.Conn.Close()
 }
 
@@ -67,14 +70,21 @@ func (c *AuxiliaryChannel) HandleKeepAlive() {
 	for {
 		select {
 		case <-ticker.C:
-			if time.Now().Sub(c.lastKeepAlive) > KeepAliveInterval*2 {
-				_ = c.Close()
-				continue
+			if c.lastKeepAlive != nil && time.Now().Sub(*c.lastKeepAlive) > KeepAliveInterval*2 {
+				log.Println("dropping connection from", c.Conn.RemoteAddr(), "due to keep alive timeout")
+				if c.TunnelPair.Primary != nil {
+					c.TunnelPair.Primary.Close()
+				}
+				return
 			}
 
 			err := c.SendMessage(KeepAliveRequest, nil)
 			if err != nil {
-				continue
+				log.Println("unable to write keep alive request:", err)
+				if c.TunnelPair.Primary != nil {
+					c.TunnelPair.Primary.Close()
+				}
+				return
 			}
 		case <-c.close:
 			return
@@ -96,7 +106,8 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 
 	switch message.OperationCode {
 	case KeepAliveResponse:
-		c.lastKeepAlive = time.Now()
+		now := time.Now()
+		c.lastKeepAlive = &now
 	case Handshake:
 		var handshake AuxiliaryHandshake
 		err := mapstructure.Decode(message.Payload, &handshake)
@@ -205,7 +216,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("accepted auxiliary connection from", r.RemoteAddr)
 
-	channel := AuxiliaryChannel{Conn: conn}
+	channel := AuxiliaryChannel{Conn: conn, close: make(chan bool)}
 	go channel.HandleKeepAlive()
 	channel.Handle()
 

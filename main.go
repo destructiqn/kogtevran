@@ -75,7 +75,6 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 		err = src.ReadPacket(&packet)
 		if err != nil {
 			if conn.Closed {
-				log.Println("closing", direction)
 				break
 			}
 

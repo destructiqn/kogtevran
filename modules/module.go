@@ -89,6 +89,15 @@ type ClientModule struct {
 	Identifier string
 }
 
+func (c *ClientModule) Close() {
+	if c.IsEnabled() {
+		_, _ = c.Tunnel.GetModuleHandler().ToggleModule(c)
+		c.Enabled = false
+	}
+
+	c.SimpleModule.Close()
+}
+
 func (c *ClientModule) GetIdentifier() string {
 	return c.Identifier
 }

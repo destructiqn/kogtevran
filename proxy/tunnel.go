@@ -51,7 +51,6 @@ func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
 	p.mutex.Unlock()
 
 	tunnel.SessionID = ""
-	tunnel.Auxiliary.Conn.Close()
 }
 
 func (p *TunnelPool) GetPair(id TunnelPairID) (*TunnelPair, bool) {
