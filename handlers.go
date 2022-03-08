@@ -184,18 +184,18 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 
 	tunnelPair, ok := proxy.CurrentTunnelPool.GetPair(id)
 	if !ok {
-		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("unknown session"))
+		minecraftTunnel.Disconnect(chat.Text("unknown session"))
 		return generic.RejectPacket(), nil
 	}
 
-	if tunnelPair.License == nil {
-		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("license validation failure"))
+	if tunnelPair.License == nil || !tunnelPair.License.IsRelated(tunnel) {
+		minecraftTunnel.Disconnect(chat.Text("license validation failure"))
 		return generic.RejectPacket(), nil
 	}
 
-	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
-	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
-	proxy.RegisterDefaultModules(tunnel.(*proxy.MinecraftTunnel))
+	tunnelPair.Primary = minecraftTunnel
+	minecraftTunnel.TunnelPair = tunnelPair
+	proxy.RegisterDefaultModules(minecraftTunnel)
 
 	log.Println("linked minecraft connection for", loginStart.Name, "with auxiliary connection from", tunnelPair.Auxiliary.Conn.RemoteAddr())
 	return generic.PassPacket(), nil
