@@ -1,11 +1,14 @@
 package proxy
 
 import (
+	"log"
+	"net"
 	"sync"
 
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
-	"github.com/destructiqn/kogtevran/net"
+	"github.com/destructiqn/kogtevran/license"
+	mcnet "github.com/destructiqn/kogtevran/net"
 	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
 )
@@ -14,6 +17,7 @@ type TunnelPair struct {
 	SessionID string
 	Auxiliary *AuxiliaryChannel
 	Primary   *MinecraftTunnel
+	License   license.License
 }
 
 type TunnelPairID struct {
@@ -60,8 +64,8 @@ type MinecraftTunnel struct {
 	TunnelPair *TunnelPair
 
 	Closed bool
-	Server *net.Conn
-	Client *net.Conn
+	Server *mcnet.Conn
+	Client *mcnet.Conn
 
 	ServerWrite sync.Mutex
 	ClientWrite sync.Mutex
@@ -128,6 +132,16 @@ func (t *MinecraftTunnel) WriteServer(packet pk.Packet) error {
 	return err
 }
 
+func (t *MinecraftTunnel) GetRemoteAddr() string {
+	host, _, err := net.SplitHostPort(t.Client.Socket.RemoteAddr().String())
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+
+	return host
+}
+
 func (t *MinecraftTunnel) Close() {
 	for _, module := range t.GetModuleHandler().GetModules() {
 		module.Close()
@@ -139,7 +153,7 @@ func (t *MinecraftTunnel) Close() {
 	CurrentTunnelPool.UnregisterPair(t.PairID)
 }
 
-func WrapConn(server, client *net.Conn) *MinecraftTunnel {
+func WrapConn(server, client *mcnet.Conn) *MinecraftTunnel {
 	tunnel := &MinecraftTunnel{
 		Server:              server,
 		Client:              client,
@@ -159,4 +173,8 @@ func WrapConn(server, client *net.Conn) *MinecraftTunnel {
 
 func (t *MinecraftTunnel) Attack(target int) error {
 	return t.WriteServer(pk.Marshal(0x02, pk.VarInt(target), pk.VarInt(1)))
+}
+
+func (t *MinecraftTunnel) HasFeature(feature license.Feature) bool {
+	return generic.IsDevelopmentEnvironment() || t.TunnelPair.License.HasFeature(feature)
 }

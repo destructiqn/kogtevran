@@ -1,8 +1,14 @@
 package generic
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
-var revision string
+var (
+	revision    string
+	environment = os.Getenv("KV_ENVIRONMENT")
+)
 
 func GetRevision() string {
 	if revision == "" {
@@ -14,4 +20,16 @@ func GetRevision() string {
 	}
 
 	return revision
+}
+
+func GetEnvironment() string {
+	if environment == "" {
+		return "development"
+	}
+
+	return environment
+}
+
+func IsDevelopmentEnvironment() bool {
+	return GetEnvironment() == "development"
 }

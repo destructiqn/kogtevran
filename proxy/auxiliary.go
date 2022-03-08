@@ -3,6 +3,7 @@ package proxy
 import (
 	"errors"
 	"fmt"
+	"github.com/destructiqn/kogtevran/license"
 	"log"
 	"net"
 	"net/http"
@@ -54,7 +55,8 @@ func (c *AuxiliaryChannel) Handle() {
 
 		err = c.HandleMessage(&message)
 		if err != nil {
-			log.Println(err)
+			log.Println("error in auxiliary connection:", err)
+			_ = c.Close()
 			return
 		}
 	}
@@ -102,8 +104,14 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			return err
 		}
 
+		licenseData, err := license.GetLicense(handshake.AuthKey)
+		if err != nil {
+			return err
+		}
+
 		pair := &TunnelPair{
 			Auxiliary: c,
+			License:   licenseData,
 		}
 
 		host, _, err := net.SplitHostPort(c.Conn.RemoteAddr().String())
@@ -166,6 +174,7 @@ type WebsocketMessage struct {
 
 type AuxiliaryHandshake struct {
 	Username string `json:"username"`
+	AuthKey  string `json:"authKey"`
 }
 
 type AuxiliaryEncryptionData struct {

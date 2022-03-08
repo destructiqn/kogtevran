@@ -188,8 +188,14 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 		return generic.RejectPacket(), nil
 	}
 
+	if tunnelPair.License == nil {
+		tunnel.(*proxy.MinecraftTunnel).Disconnect(chat.Text("license validation failure"))
+		return generic.RejectPacket(), nil
+	}
+
 	tunnelPair.Primary = tunnel.(*proxy.MinecraftTunnel)
 	tunnel.(*proxy.MinecraftTunnel).TunnelPair = tunnelPair
+	proxy.RegisterDefaultModules(tunnel.(*proxy.MinecraftTunnel))
 
 	log.Println("linked minecraft connection for", loginStart.Name, "with auxiliary connection from", tunnelPair.Auxiliary.Conn.RemoteAddr())
 	return generic.PassPacket(), nil

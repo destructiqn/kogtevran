@@ -46,7 +46,6 @@ func main() {
 		}
 
 		conn := proxy.WrapConn(server, &client)
-		proxy.RegisterDefaultModules(conn)
 
 		go pipe(conn, protocol.ConnS2C)
 		go pipe(conn, protocol.ConnC2S)

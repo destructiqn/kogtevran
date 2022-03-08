@@ -2,6 +2,9 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/destructiqn/kogtevran/license"
+	"github.com/destructiqn/kogtevran/modules/longjump"
+	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 	"log"
 	"sort"
 	"time"
@@ -13,11 +16,9 @@ import (
 	"github.com/destructiqn/kogtevran/modules/aura"
 	"github.com/destructiqn/kogtevran/modules/cmdcam"
 	"github.com/destructiqn/kogtevran/modules/flight"
-	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
 	"github.com/destructiqn/kogtevran/modules/spammer"
 	"github.com/destructiqn/kogtevran/modules/tpaura"
-	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
 type ModuleHandler struct {
@@ -197,25 +198,48 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 	}
 }
 
-func RegisterDefaultModules(tunnel generic.Tunnel) {
+func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 	moduleHandler := tunnel.GetModuleHandler()
-
-	genericAura := aura.GenericAura{
-		MaxDistance: 7, HitAnimation: false,
-		SimpleTickingModule: modules.SimpleTickingModule{Interval: 35 * time.Millisecond},
-	}
-
 	tpAuraTicking := modules.SimpleTickingModule{Interval: 250 * time.Millisecond}
 
-	moduleHandler.RegisterModule(&flight.Flight{Speed: 3})
-	moduleHandler.RegisterModule(&antiknockback.AntiKnockback{})
-	moduleHandler.RegisterModule(&nofall.NoFall{})
-	moduleHandler.RegisterModule(&aura.KillAura{GenericAura: genericAura})
-	moduleHandler.RegisterModule(&aura.MobAura{GenericAura: genericAura})
+	if tunnel.HasFeature(license.FeatureFlight) {
+		moduleHandler.RegisterModule(&flight.Flight{Speed: 3})
+	}
+
+	if tunnel.HasFeature(license.FeatureAntiKnockback) {
+		moduleHandler.RegisterModule(&antiknockback.AntiKnockback{})
+	}
+
+	if tunnel.HasFeature(license.FeatureNoFall) {
+		moduleHandler.RegisterModule(&nofall.NoFall{})
+	}
+
+	if tunnel.HasFeature(license.FeatureKillAura) {
+		genericAura := aura.GenericAura{
+			MaxDistance: 7, HitAnimation: false,
+			SimpleTickingModule: modules.SimpleTickingModule{Interval: 35 * time.Millisecond},
+		}
+
+		moduleHandler.RegisterModule(&aura.KillAura{GenericAura: genericAura})
+		moduleHandler.RegisterModule(&aura.MobAura{GenericAura: genericAura})
+	}
+
+	if tunnel.HasFeature(license.FeatureLongJump) {
+		moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
+	}
+
+	if tunnel.HasFeature(license.FeatureUnlimitedCPS) {
+		moduleHandler.RegisterModule(&unlimitedcps.UnlimitedCPS{})
+	}
+
+	if tunnel.HasFeature(license.FeatureTPAura) {
+		moduleHandler.RegisterModule(&tpaura.TPAura{SearchRadius: 20, TeleportRadius: 4, SimpleTickingModule: tpAuraTicking})
+	}
+
+	if tunnel.HasFeature(license.FeaturePlayerESP) {
+		moduleHandler.RegisterModule(&modules.ClientModule{Identifier: modules.ModulePlayerESP})
+	}
+
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
-	moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
-	moduleHandler.RegisterModule(&unlimitedcps.UnlimitedCPS{})
-	moduleHandler.RegisterModule(&tpaura.TPAura{SearchRadius: 20, TeleportRadius: 4, SimpleTickingModule: tpAuraTicking})
-	moduleHandler.RegisterModule(&modules.ClientModule{Identifier: modules.ModulePlayerESP})
 }

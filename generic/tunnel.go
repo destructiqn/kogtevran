@@ -18,6 +18,7 @@ type Tunnel interface {
 	GetModuleHandler() ModuleHandler
 	GetChatHandler() ChatHandler
 	Disconnect(message chat.Message)
+	GetRemoteAddr() string
 	Close()
 }
 
