@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/destructiqn/kogtevran/modules"
 	"github.com/gorilla/websocket"
@@ -29,9 +30,18 @@ const (
 	ModuleToggleAck
 )
 
+const KeepAliveInterval = 20 * time.Second
+
 type AuxiliaryChannel struct {
-	Conn       *websocket.Conn
-	TunnelPair *TunnelPair
+	Conn          *websocket.Conn
+	TunnelPair    *TunnelPair
+	lastKeepAlive time.Time
+	close         chan bool
+}
+
+func (c *AuxiliaryChannel) Close() error {
+	c.close <- true
+	return c.Conn.Close()
 }
 
 func (c *AuxiliaryChannel) Handle() {
@@ -50,6 +60,26 @@ func (c *AuxiliaryChannel) Handle() {
 	}
 }
 
+func (c *AuxiliaryChannel) HandleKeepAlive() {
+	ticker := time.NewTicker(KeepAliveInterval)
+	for {
+		select {
+		case <-ticker.C:
+			if time.Now().Sub(c.lastKeepAlive) > KeepAliveInterval*2 {
+				_ = c.Close()
+				continue
+			}
+
+			err := c.SendMessage(KeepAliveRequest, nil)
+			if err != nil {
+				continue
+			}
+		case <-c.close:
+			return
+		}
+	}
+}
+
 func (c *AuxiliaryChannel) SendMessage(operation AuxiliaryOperationCode, payload interface{}) error {
 	return c.Conn.WriteJSON(WebsocketMessage{
 		OperationCode: operation,
@@ -63,6 +93,8 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 	}
 
 	switch message.OperationCode {
+	case KeepAliveResponse:
+		c.lastKeepAlive = time.Now()
 	case Handshake:
 		var handshake AuxiliaryHandshake
 		err := mapstructure.Decode(message.Payload, &handshake)
@@ -165,8 +197,9 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("accepted auxiliary connection from", r.RemoteAddr)
 
 	channel := AuxiliaryChannel{Conn: conn}
+	go channel.HandleKeepAlive()
 	channel.Handle()
 
 	log.Println("closing auxiliary connection from", r.RemoteAddr)
-	conn.Close()
+	_ = channel.Close()
 }

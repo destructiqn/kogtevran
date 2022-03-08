@@ -1,5 +1,7 @@
 github.com/Tnze/go-mc v1.17.2-0.20220104152428-c724909cd711 h1:xPIWCcvFbKNGiexDlaQgfbeZKIst53JqyLr0yOehruE=
 github.com/Tnze/go-mc v1.17.2-0.20220104152428-c724909cd711/go.mod h1:t0AI38F1BEmmy8/uLhr9RCOUeDbBj3oUNQH9akjzMc0=
+github.com/Tnze/go-mc v1.17.2-0.20220305162846-cf25807f6848 h1:OvwV85mi/GMjQedjAHZdEf5Jx51Nrnzcxo/tLAlsS2g=
+github.com/Tnze/go-mc v1.17.2-0.20220305162846-cf25807f6848/go.mod h1:6MVVpHUdiCvauT4RsnzM3BUOue3eAUuJIr9wzjirGIY=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
