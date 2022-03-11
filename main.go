@@ -26,11 +26,16 @@ func GetRemoteAddr() string {
 
 func main() {
 	go func() {
+		var err error
 		if certPath, ok := os.LookupEnv("KV_CERT_PATH"); ok {
 			keyPath := os.Getenv("KV_CERT_KEY_PATH")
-			_ = http.ListenAndServeTLS("0.0.0.0:8080", certPath, keyPath, http.HandlerFunc(proxy.WebsocketHandler))
+			err = http.ListenAndServeTLS("0.0.0.0:8080", certPath, keyPath, http.HandlerFunc(proxy.WebsocketHandler))
 		} else {
-			_ = http.ListenAndServe("0.0.0.0:8080", http.HandlerFunc(proxy.WebsocketHandler))
+			err = http.ListenAndServe("0.0.0.0:8080", http.HandlerFunc(proxy.WebsocketHandler))
+		}
+
+		if err != nil {
+			log.Fatalln("http listener error:", err)
 		}
 	}()
 
