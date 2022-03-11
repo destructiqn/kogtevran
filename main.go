@@ -25,10 +25,10 @@ func GetRemoteAddr() string {
 
 func main() {
 	go func() {
-		_ = http.ListenAndServe("127.0.0.1:8080", http.HandlerFunc(proxy.WebsocketHandler))
+		_ = http.ListenAndServe("0.0.0.0:8080", http.HandlerFunc(proxy.WebsocketHandler))
 	}()
 
-	proxyServer, err := net.ListenMC("127.0.0.1:25565")
+	proxyServer, err := net.ListenMC("0.0.0.0:25565")
 	if err != nil {
 		panic(err)
 	}

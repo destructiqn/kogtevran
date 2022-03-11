@@ -3,11 +3,11 @@ package license
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/destructiqn/kogtevran/generic"
 	"log"
 	"os"
 	"time"
 
+	"github.com/destructiqn/kogtevran/generic"
 	"github.com/golang-jwt/jwt"
 )
 
