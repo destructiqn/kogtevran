@@ -28,6 +28,7 @@ type PlayerHandler interface {
 	SetFlying(isFlying bool)
 	GetLocation() *minecraft.Location
 	GetEntityID() int32
+	GetPlayerName() string
 	Attack(target int) error
 }
 

@@ -171,6 +171,7 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 	loginStart := packet.(*protocol.LoginStart)
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
 	log.Println(loginStart.Name, "is connecting from", minecraftTunnel.Client.Socket.RemoteAddr())
+	minecraftTunnel.PlayerHandler.PlayerName = string(loginStart.Name)
 
 	host, _, err := net.SplitHostPort(minecraftTunnel.Client.Socket.RemoteAddr().String())
 	if err != nil {
@@ -278,7 +279,7 @@ func HandleLoginSuccess(_ protocol.Packet, tunnel generic.Tunnel) (result *gener
 
 func HandleDisconnect(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	disconnect := packet.(*protocol.Disconnect)
-	log.Println("disconnected from server:", disconnect.Reason.String())
+	log.Println(tunnel.GetPlayerHandler().GetPlayerName(), "was disconnected from server:", disconnect.Reason.String())
 	err = tunnel.WriteClient(packet.Marshal())
 	if err != nil {
 		return

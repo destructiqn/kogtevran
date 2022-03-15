@@ -10,11 +10,12 @@ import (
 )
 
 type PlayerHandler struct {
-	tunnel   *MinecraftTunnel
-	entityID int32
-	isFlying bool
-	onGround bool
-	location *minecraft.Location
+	tunnel     *MinecraftTunnel
+	entityID   int32
+	isFlying   bool
+	onGround   bool
+	location   *minecraft.Location
+	PlayerName string
 }
 
 func NewPlayerHandler(tunnel *MinecraftTunnel) *PlayerHandler {
@@ -42,6 +43,10 @@ func (p *PlayerHandler) SetFlying(isFlying bool) {
 
 func (p *PlayerHandler) GetLocation() *minecraft.Location {
 	return p.location
+}
+
+func (p *PlayerHandler) GetPlayerName() string {
+	return p.PlayerName
 }
 
 func (p *PlayerHandler) Attack(target int) error {
