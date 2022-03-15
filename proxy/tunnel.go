@@ -8,9 +8,11 @@ import (
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/license"
+	"github.com/destructiqn/kogtevran/metrics"
 	mcnet "github.com/destructiqn/kogtevran/net"
 	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type TunnelPair struct {
@@ -30,14 +32,15 @@ var CurrentTunnelPool = &TunnelPool{
 }
 
 type TunnelPool struct {
-	pool  map[TunnelPairID]*TunnelPair
-	mutex sync.Mutex
+	pool map[TunnelPairID]*TunnelPair
+	sync.Mutex
 }
 
 func (p *TunnelPool) RegisterPair(id TunnelPairID, pair *TunnelPair) {
-	p.mutex.Lock()
+	p.Lock()
 	p.pool[id] = pair
-	p.mutex.Unlock()
+	p.Unlock()
+	UpdateConnectionMetrics()
 }
 
 func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
@@ -46,11 +49,12 @@ func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
 		return
 	}
 
-	p.mutex.Lock()
+	p.Lock()
 	delete(p.pool, id)
-	p.mutex.Unlock()
+	p.Unlock()
 
 	tunnel.SessionID = ""
+	UpdateConnectionMetrics()
 }
 
 func (p *TunnelPool) GetPair(id TunnelPairID) (*TunnelPair, bool) {
@@ -113,6 +117,7 @@ func (t *MinecraftTunnel) GetModuleHandler() generic.ModuleHandler {
 }
 
 func (t *MinecraftTunnel) Disconnect(reason chat.Message) {
+	metrics.Disconnects.With(prometheus.Labels{"reason": reason.String()}).Inc()
 	_ = t.WriteClient(pk.Marshal(0x00, reason))
 	t.Close()
 }
@@ -150,6 +155,56 @@ func (t *MinecraftTunnel) Close() {
 	_ = t.Server.Close()
 	_ = t.Client.Close()
 	CurrentTunnelPool.UnregisterPair(t.PairID)
+}
+
+func UpdateConnectionMetrics() {
+	CurrentTunnelPool.Lock()
+	defer CurrentTunnelPool.Unlock()
+
+	var (
+		auxiliaryConnections int
+		minecraftConnections int
+	)
+
+	for _, pair := range CurrentTunnelPool.pool {
+		if pair.Primary != nil {
+			minecraftConnections++
+		}
+
+		if pair.Auxiliary != nil {
+			auxiliaryConnections++
+		}
+	}
+
+	metrics.TotalConnections.With(prometheus.Labels{"type": "auxiliary"}).Set(float64(auxiliaryConnections))
+	metrics.TotalConnections.With(prometheus.Labels{"type": "minecraft"}).Set(float64(minecraftConnections))
+}
+
+func UpdateModuleMetrics() {
+	CurrentTunnelPool.Lock()
+	defer CurrentTunnelPool.Unlock()
+
+	data := make(map[string]int)
+	for _, pair := range CurrentTunnelPool.pool {
+		if pair.Primary == nil {
+			continue
+		}
+
+		for _, module := range pair.Primary.ModuleHandler.GetModules() {
+			if module.IsEnabled() {
+				if _, ok := data[module.GetIdentifier()]; !ok {
+					data[module.GetIdentifier()] = 0
+				}
+
+				data[module.GetIdentifier()] += 1
+			}
+		}
+	}
+
+	metrics.UsedModules.Reset()
+	for module, count := range data {
+		metrics.UsedModules.With(prometheus.Labels{"identifier": module}).Set(float64(count))
+	}
 }
 
 func WrapConn(server, client *mcnet.Conn) *MinecraftTunnel {

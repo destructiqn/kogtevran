@@ -93,6 +93,8 @@ func (m *ModuleHandler) IsModuleEnabled(moduleID string) bool {
 }
 
 func (m *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
+	defer UpdateModuleMetrics()
+
 	if _, ok := module.(*modules.ClientModule); !ok {
 		value, err := module.Toggle()
 		if err != nil {

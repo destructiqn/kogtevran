@@ -9,6 +9,7 @@ import (
 
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/metrics"
 	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
 	"github.com/destructiqn/kogtevran/proxy"
@@ -18,6 +19,8 @@ import (
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nofall"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.MinecraftTunnel) (result *generic.HandlerResult, err error)
@@ -144,6 +147,8 @@ func WrapPacketHandlers(packet protocol.Packet, handlers ...PacketHandler) RawPa
 
 func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	handshake := packet.(*protocol.Handshake)
+	metrics.HandshakeCount.With(prometheus.Labels{"state": fmt.Sprintf("%d", handshake.NextState)}).Inc()
+
 	switch handshake.NextState {
 	case 1:
 		tunnel.SetState(protocol.ConnStateStatus)
@@ -197,6 +202,7 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 	tunnelPair.Primary = minecraftTunnel
 	minecraftTunnel.TunnelPair = tunnelPair
 	proxy.RegisterDefaultModules(minecraftTunnel)
+	proxy.UpdateConnectionMetrics()
 
 	log.Println("linked minecraft connection for", loginStart.Name, "with auxiliary connection from", tunnelPair.Auxiliary.Conn.RemoteAddr())
 	return generic.PassPacket(), nil

@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	pkg.re/essentialkaos/translit.v2 v2.0.3+incompatible // indirect
 )

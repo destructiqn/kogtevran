@@ -11,11 +11,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/destructiqn/kogtevran/metrics"
 	"github.com/destructiqn/kogtevran/net"
 	"github.com/destructiqn/kogtevran/net/CFB8"
 	pk "github.com/destructiqn/kogtevran/net/packet"
 	"github.com/destructiqn/kogtevran/protocol"
 	"github.com/destructiqn/kogtevran/proxy"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var ServerPort = 25565
@@ -25,6 +27,14 @@ func GetRemoteAddr() string {
 }
 
 func main() {
+	metrics.RegisterMetrics()
+	go func() {
+		err := http.ListenAndServe("0.0.0.0:9090", promhttp.Handler())
+		if err != nil {
+			log.Fatalln("prometheus listener error:", err)
+		}
+	}()
+
 	go func() {
 		var err error
 		if certPath, ok := os.LookupEnv("KV_CERT_PATH"); ok {
