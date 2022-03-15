@@ -154,7 +154,7 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 	}
 
 	if err != nil {
-		log.Println("error in", srcName, "->", dstName, "connection:", err)
+		log.Println("error in", direction, "connection:", err)
 		conn.Close()
 	}
 }
