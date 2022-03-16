@@ -20,6 +20,7 @@ const (
 	ModuleTPAura        = "TPAura"
 	ModulePlayerESP     = "PlayerESP"
 	ModuleNuker         = "Nuker"
+	ModuleFastBreak     = "FastBreak"
 )
 
 type DefaultModule struct {

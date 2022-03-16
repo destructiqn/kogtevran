@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"github.com/destructiqn/kogtevran/license"
+	"github.com/destructiqn/kogtevran/modules/fastbreak"
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nuker"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
@@ -245,6 +246,10 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 
 	if tunnel.HasFeature(license.FeatureNuker) {
 		moduleHandler.RegisterModule(&nuker.Nuker{Radius: 2, SimpleTickingModule: modules.SimpleTickingModule{Interval: time.Second}})
+	}
+
+	if tunnel.HasFeature(license.FeatureFastBreak) {
+		moduleHandler.RegisterModule(&fastbreak.FastBreak{})
 	}
 
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})

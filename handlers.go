@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/destructiqn/kogtevran/modules/fastbreak"
 	"log"
 	"net"
 	"strconv"
@@ -57,6 +58,9 @@ var (
 			),
 			protocol.ServerboundPlayerPositionAndLook: WrapPacketHandlers(&protocol.ServerPlayerPositionAndLook{},
 				longjump.HandleServerPlayerPositionAndLook, proxy.HandleServerPlayerPositionAndLook, nofall.HandleServerPlayerPositionAndLook,
+			),
+			protocol.ServerboundPlayerDigging: WrapPacketHandlers(&protocol.PlayerDigging{},
+				fastbreak.HandlePlayerDigging,
 			),
 			protocol.ServerboundCloseWindow: WrapPacketHandlers(&protocol.ServerCloseWindow{},
 				proxy.HandleCloseWindow,
