@@ -13,6 +13,16 @@ type Nuker struct {
 	Radius int `option:"radius"`
 }
 
+func (n *Nuker) GetDescription() []string {
+	return []string{
+		"Все блоки вокруг тебя ломаются автоматически",
+		"",
+		"§nПараметры",
+		"§7radius§f - радиус, в котором нужно ломать блоки",
+		"§7interval§f - интервал между циклами ломания блоков",
+	}
+}
+
 func (n *Nuker) GetIdentifier() string {
 	return modules.ModuleNuker
 }

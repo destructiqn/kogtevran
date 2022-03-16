@@ -12,6 +12,10 @@ type UnlimitedCPS struct {
 	modules.DefaultModule
 }
 
+func (u *UnlimitedCPS) GetDescription() []string {
+	return []string{"Убери ограничение кпс!"}
+}
+
 func (u *UnlimitedCPS) GetIdentifier() string {
 	return modules.ModuleUnlimitedCPS
 }

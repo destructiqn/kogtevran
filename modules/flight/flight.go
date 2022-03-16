@@ -14,6 +14,15 @@ type Flight struct {
 	Speed float64 `option:"speed"`
 }
 
+func (f *Flight) GetDescription() []string {
+	return []string{
+		"Летай везде, где душе угодно",
+		"",
+		"§nПараметры",
+		"§7speed§f - скорость полёта",
+	}
+}
+
 func (f *Flight) GetIdentifier() string {
 	return modules.ModuleFlight
 }

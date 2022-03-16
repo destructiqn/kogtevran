@@ -10,6 +10,10 @@ type NoFall struct {
 	modules.SimpleModule
 }
 
+func (n *NoFall) GetDescription() []string {
+	return []string{"Не получай урон от падения"}
+}
+
 func (n *NoFall) GetIdentifier() string {
 	return modules.ModuleNoFall
 }

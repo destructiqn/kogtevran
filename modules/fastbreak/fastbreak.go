@@ -10,6 +10,10 @@ type FastBreak struct {
 	modules.SimpleModule
 }
 
+func (f *FastBreak) GetDescription() []string {
+	return []string{"Быстро ломай все блоки"}
+}
+
 func (f *FastBreak) GetIdentifier() string {
 	return modules.ModuleFastBreak
 }

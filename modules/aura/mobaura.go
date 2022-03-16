@@ -10,6 +10,16 @@ type MobAura struct {
 	GenericAura
 }
 
+func (m *MobAura) GetDescription() []string {
+	return []string{
+		"Убивай всех мобов в радиусе 6 блоков",
+		"",
+		"§nПараметры",
+		"§7maxDistance§f - максимальное расстояние до цели",
+		"§7hitAnimation§f - показывать анимацию удара",
+	}
+}
+
 func (m *MobAura) Register(tunnel generic.Tunnel) {
 	m.GenericAura.Filter = m.Predicate
 	m.GenericAura.Register(tunnel)

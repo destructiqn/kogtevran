@@ -13,6 +13,10 @@ type ChestStealer struct {
 	modules.SimpleModule
 }
 
+func (c *ChestStealer) GetDescription() []string {
+	return []string{"Автоматически забирай все предметы из сундуков"}
+}
+
 func (c *ChestStealer) GetIdentifier() string {
 	return modules.ModuleChestStealer
 }

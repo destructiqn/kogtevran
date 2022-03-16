@@ -89,7 +89,8 @@ func (m *SimpleTickingModule) StopTicker() {
 
 type ClientModule struct {
 	SimpleModule
-	Identifier string
+	Identifier  string
+	Description []string
 }
 
 func (c *ClientModule) Close() {
@@ -103,4 +104,8 @@ func (c *ClientModule) Close() {
 
 func (c *ClientModule) GetIdentifier() string {
 	return c.Identifier
+}
+
+func (c *ClientModule) GetDescription() []string {
+	return c.Description
 }

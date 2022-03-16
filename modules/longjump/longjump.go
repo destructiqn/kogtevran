@@ -14,6 +14,15 @@ type LongJump struct {
 	Power int `option:"power"`
 }
 
+func (l *LongJump) GetDescription() []string {
+	return []string{
+		"Увеличь дальность своего прыжка",
+		"",
+		"§nПараметры",
+		"§7power§f - множитель дальности прыжка",
+	}
+}
+
 func (l *LongJump) GetIdentifier() string {
 	return modules.ModuleLongJump
 }

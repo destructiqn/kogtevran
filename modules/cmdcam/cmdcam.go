@@ -6,6 +6,10 @@ type CMDCam struct {
 	modules.SimpleModule
 }
 
+func (c *CMDCam) GetDescription() []string {
+	return []string{"Даёт возможность использовать команду /cam"}
+}
+
 func (c *CMDCam) GetIdentifier() string {
 	return modules.ModuleCMDCam
 }

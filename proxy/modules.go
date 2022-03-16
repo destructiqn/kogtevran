@@ -135,17 +135,18 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 
 	for _, module := range modulesList {
 		control := map[string]interface{}{
-			"id":    fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
-			"type":  "Button",
-			"pos":   "BOTTOM_RIGHT",
-			"w":     85,
-			"h":     20,
-			"t":     module.GetIdentifier(),
-			"tc":    0xAAAAAA,
-			"hc":    0x5555FF,
-			"x":     x,
-			"y":     y,
-			"color": -0x33000000,
+			"id":      fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
+			"type":    "Button",
+			"pos":     "BOTTOM_RIGHT",
+			"w":       85,
+			"h":       20,
+			"t":       module.GetIdentifier(),
+			"tc":      0xAAAAAA,
+			"hc":      0x5555FF,
+			"x":       x,
+			"y":       y,
+			"tooltip": module.GetDescription(),
+			"color":   -0x33000000,
 			"click": map[string]interface{}{
 				"act":  "CHAT",
 				"data": fmt.Sprintf("/toggle %s", module.GetIdentifier()),
@@ -242,7 +243,10 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 	}
 
 	if tunnel.HasFeature(license.FeaturePlayerESP) {
-		moduleHandler.RegisterModule(&modules.ClientModule{Identifier: modules.ModulePlayerESP})
+		moduleHandler.RegisterModule(&modules.ClientModule{
+			Identifier:  modules.ModulePlayerESP,
+			Description: []string{"Отныне ты сможешь видеть игроков через стены"},
+		})
 	}
 
 	if tunnel.HasFeature(license.FeatureNuker) {

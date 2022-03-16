@@ -19,6 +19,18 @@ type TPAura struct {
 	CurrentTarget  minecraft.Entity
 }
 
+func (t *TPAura) GetDescription() []string {
+	return []string{
+		"Автоматически телепортирует тебя к игрокам",
+		"",
+		"§nПараметры",
+		"§7searchRadius§f - радиус поиска игроков-целей",
+		"§7teleportRadius§f - расстояние, на котором ты будешь находиться после каждого телепорта",
+		"§7sendClient§f - синхронизирует телепортации с клиентом",
+		"§7interval§f - интервал между телепортациями",
+	}
+}
+
 func (t *TPAura) Tick() error {
 	playerHandler := t.Tunnel.GetPlayerHandler()
 	playerLocation := playerHandler.GetLocation()

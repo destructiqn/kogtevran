@@ -25,6 +25,10 @@ type NoBadEffects struct {
 	modules.SimpleModule
 }
 
+func (n *NoBadEffects) GetDescription() []string {
+	return []string{"Отрицательные эффекты больше не отображаются"}
+}
+
 func (n *NoBadEffects) GetIdentifier() string {
 	return modules.ModuleNoBadEffects
 }

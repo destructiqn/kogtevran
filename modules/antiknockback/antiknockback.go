@@ -12,6 +12,10 @@ type AntiKnockback struct {
 	X, Y, Z int
 }
 
+func (a *AntiKnockback) GetDescription() []string {
+	return []string{"Теперь тебя будет невозможно откинуть"}
+}
+
 func (a *AntiKnockback) GetIdentifier() string {
 	return modules.ModuleAntiKnockback
 }

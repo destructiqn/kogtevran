@@ -11,6 +11,16 @@ type Spammer struct {
 	Message string `option:"message"`
 }
 
+func (s *Spammer) GetDescription() []string {
+	return []string{
+		"Автоматически отправляет сообщения в чат",
+		"",
+		"§nПараметры",
+		"§7message§f - сообщение, которое нужно отправлять в чат",
+		"§7interval§f - интервал между сообщениями",
+	}
+}
+
 func (s *Spammer) GetIdentifier() string {
 	return modules.ModuleSpammer
 }

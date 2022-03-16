@@ -5,6 +5,7 @@ import "time"
 type Module interface {
 	Register(conn Tunnel)
 	GetIdentifier() string
+	GetDescription() []string
 	Toggle() (bool, error)
 	IsEnabled() bool
 	SetEnabled(enabled bool)
