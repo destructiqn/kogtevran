@@ -224,6 +224,35 @@ func (e *EntityTeleport) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundEntityTeleport, e.EntityID, e.X, e.Y, e.Z, e.Yaw, e.Pitch, e.OnGround)
 }
 
+type EntityEffect struct {
+	EntityID      pk.VarInt
+	EffectID      pk.Byte
+	Amplifier     pk.Byte
+	Duration      pk.VarInt
+	HideParticles pk.Boolean
+}
+
+func (e *EntityEffect) Read(packet pk.Packet) error {
+	return packet.Scan(&e.EntityID, &e.EffectID, &e.Amplifier, &e.Duration, &e.HideParticles)
+}
+
+func (e *EntityEffect) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundEntityEffect, e.EntityID, e.EffectID, e.Amplifier, e.Duration, e.HideParticles)
+}
+
+type RemoveEntityEffect struct {
+	EntityID pk.VarInt
+	EffectID pk.Byte
+}
+
+func (r *RemoveEntityEffect) Read(packet pk.Packet) error {
+	return packet.Scan(&r.EntityID, &r.EffectID)
+}
+
+func (r *RemoveEntityEffect) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundRemoveEntityEffect, r.EntityID, r.EffectID)
+}
+
 type ChangeGameState struct {
 	Reason pk.UnsignedByte
 	Value  pk.Float

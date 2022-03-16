@@ -21,6 +21,7 @@ const (
 	ModulePlayerESP     = "PlayerESP"
 	ModuleNuker         = "Nuker"
 	ModuleFastBreak     = "FastBreak"
+	ModuleNoBadEffects  = "NoBadEffects"
 )
 
 type DefaultModule struct {

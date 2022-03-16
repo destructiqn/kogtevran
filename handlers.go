@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/destructiqn/kogtevran/modules/fastbreak"
+	"github.com/destructiqn/kogtevran/modules/nobadeffects"
 	"log"
 	"net"
 	"strconv"
@@ -105,6 +106,9 @@ var (
 			),
 			protocol.ClientboundEntityTeleport: WrapPacketHandlers(&protocol.EntityTeleport{},
 				proxy.HandleEntityTeleport,
+			),
+			protocol.ClientboundEntityEffect: WrapPacketHandlers(&protocol.EntityEffect{},
+				nobadeffects.HandleEntityEffect,
 			),
 			// protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
 			// 	proxy.HandleOpenWindow, cheststealer.HandleOpenWindow,
