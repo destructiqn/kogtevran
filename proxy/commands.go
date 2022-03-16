@@ -154,6 +154,73 @@ var Commands = map[string]CommandHandler{
 		packet := pk.Marshal(0x3F, data...)
 		return tunnel.WriteClient(packet)
 	},
+
+	"gamestate": func(args []string, tunnel generic.Tunnel) error {
+		if len(args) < 1 {
+			return errors.New("not enough args")
+		}
+
+		reason, err := strconv.Atoi(args[0])
+		if err != nil {
+			return err
+		}
+
+		value := 0
+		if len(args) == 2 {
+			value, err = strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+		}
+
+		packet := &protocol.ChangeGameState{
+			Reason: pk.UnsignedByte(reason),
+			Value:  pk.Float(value),
+		}
+
+		return tunnel.WriteClient(packet.Marshal())
+	},
+
+	"dig": func(args []string, tunnel generic.Tunnel) error {
+		if len(args) < 3 {
+			return errors.New("not enough args")
+		}
+
+		x, err := strconv.Atoi(args[0])
+		if err != nil {
+			return err
+		}
+
+		y, err := strconv.Atoi(args[1])
+		if err != nil {
+			return err
+		}
+
+		z, err := strconv.Atoi(args[2])
+		if err != nil {
+			return err
+		}
+
+		position := pk.Position{X: x, Y: y, Z: z}
+		start := &protocol.PlayerDigging{
+			Face:     1,
+			Status:   0,
+			Location: position,
+		}
+
+		finish := &protocol.PlayerDigging{
+			Face:     1,
+			Status:   2,
+			Location: position,
+		}
+
+		err = tunnel.WriteServer(start.Marshal())
+		if err != nil {
+			return err
+		}
+
+		return tunnel.WriteServer(finish.Marshal())
+	},
 }
 
 func HandleCommand(message string, tunnel generic.Tunnel) bool {

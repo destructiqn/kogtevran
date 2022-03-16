@@ -345,7 +345,7 @@ func (v *VarLong) ReadFrom(r io.Reader) (n int64, err error) {
 
 func (p Position) WriteTo(w io.Writer) (n int64, err error) {
 	var b [8]byte
-	position := uint64(p.X&0x3FFFFFF)<<38 | uint64((p.Z&0x3FFFFFF)<<12) | uint64(p.Y&0xFFF)
+	position := uint64(p.X&0x3FFFFFF)<<38 | uint64((p.Y&0xFFF)<<26) | uint64(p.Z&0x3FFFFFF)
 	for i := 7; i >= 0; i-- {
 		b[i] = byte(position)
 		position >>= 8
@@ -363,8 +363,8 @@ func (p *Position) ReadFrom(r io.Reader) (n int64, err error) {
 	n += nn
 
 	x := int(v >> 38)
-	y := int(v & 0xFFF)
-	z := int(v << 26 >> 38)
+	y := int(v>>26) & 0xFFF
+	z := int(v << 38 >> 38)
 
 	//处理负数
 	if x >= 1<<25 {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/destructiqn/kogtevran/license"
 	"github.com/destructiqn/kogtevran/modules/longjump"
+	"github.com/destructiqn/kogtevran/modules/nuker"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 	"log"
 	"sort"
@@ -240,6 +241,10 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 
 	if tunnel.HasFeature(license.FeaturePlayerESP) {
 		moduleHandler.RegisterModule(&modules.ClientModule{Identifier: modules.ModulePlayerESP})
+	}
+
+	if tunnel.HasFeature(license.FeatureNuker) {
+		moduleHandler.RegisterModule(&nuker.Nuker{Radius: 2, SimpleTickingModule: modules.SimpleTickingModule{Interval: time.Second}})
 	}
 
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})

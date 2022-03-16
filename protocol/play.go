@@ -434,6 +434,30 @@ func (p *ServerPlayerPositionAndLook) Marshal() pk.Packet {
 	return pk.Marshal(ServerboundPlayerPositionAndLook, p.X, p.Y, p.Z, p.Yaw, p.Pitch, p.OnGround)
 }
 
+type PlayerDigging struct {
+	Status   pk.Byte
+	Location pk.Position
+	Face     pk.Byte
+}
+
+func (p *PlayerDigging) Read(packet pk.Packet) error {
+	return packet.Scan(&p.Status, &p.Location, &p.Face)
+}
+
+func (p *PlayerDigging) Marshal() pk.Packet {
+	return pk.Marshal(ServerboundPlayerDigging, p.Status, p.Location, p.Face)
+}
+
+type ServerAnimation struct{}
+
+func (s *ServerAnimation) Read(_ pk.Packet) error {
+	return nil
+}
+
+func (s *ServerAnimation) Marshal() pk.Packet {
+	return pk.Marshal(ServerboundAnimation)
+}
+
 type ClickWindow struct {
 	WindowID     pk.UnsignedByte
 	Slot         pk.Short

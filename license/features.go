@@ -11,4 +11,5 @@ const (
 	FeatureUnlimitedCPS  Feature = 0b100000
 	FeatureTPAura        Feature = 0b1000000
 	FeaturePlayerESP     Feature = 0b10000000
+	FeatureNuker         Feature = 0b100000000
 )

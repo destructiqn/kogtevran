@@ -19,6 +19,7 @@ const (
 	ModuleUnlimitedCPS  = "UnlimitedCPS"
 	ModuleTPAura        = "TPAura"
 	ModulePlayerESP     = "PlayerESP"
+	ModuleNuker         = "Nuker"
 )
 
 type DefaultModule struct {
