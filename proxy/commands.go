@@ -221,6 +221,46 @@ var Commands = map[string]CommandHandler{
 
 		return tunnel.WriteServer(finish.Marshal())
 	},
+
+	"gamemode": func(args []string, tunnel generic.Tunnel) error {
+		if len(args) < 1 {
+			return tunnel.GetChatHandler().SendMessage(chat.TranslateMsg("commands.gamemode.usage"), protocol.ChatPositionSystemMessage)
+		}
+
+		var gameMode pk.Float
+		var translation string
+
+		switch args[0] {
+		case "0", "survival":
+			gameMode = 0
+			translation = "survival"
+		case "1", "creative":
+			gameMode = 1
+			translation = "creative"
+		case "2", "adventure":
+			gameMode = 2
+			translation = "adventure"
+		case "3", "spectator":
+			gameMode = 3
+			translation = "spectator"
+		}
+
+		packet := &protocol.ChangeGameState{
+			Reason: 3,
+			Value:  gameMode,
+		}
+
+		err := tunnel.WriteClient(packet.Marshal())
+		if err != nil {
+			return err
+		}
+
+		return tunnel.GetChatHandler().SendMessage(
+			chat.TranslateMsg("commands.gamemode.success.self",
+				chat.TranslateMsg(fmt.Sprintf("gameMode.%s", translation)),
+			), protocol.ChatPositionSystemMessage,
+		)
+	},
 }
 
 func HandleCommand(message string, tunnel generic.Tunnel) bool {
