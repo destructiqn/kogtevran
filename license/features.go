@@ -14,4 +14,5 @@ const (
 	FeatureNuker         Feature = 0b100000000
 	FeatureFastBreak     Feature = 0b1000000000
 	FeatureNoBadEffects  Feature = 0b10000000000
+	FeatureChestESP		 Feature = 0b100000000000
 )

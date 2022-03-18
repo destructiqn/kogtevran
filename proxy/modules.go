@@ -245,7 +245,14 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 	if tunnel.HasFeature(license.FeaturePlayerESP) {
 		moduleHandler.RegisterModule(&modules.ClientModule{
 			Identifier:  modules.ModulePlayerESP,
-			Description: []string{"Отныне ты сможешь видеть игроков через стены"},
+			Description: []string{"Отныне ты можешь видеть игроков через стены"},
+		})
+	}
+
+	if tunnel.HasFeature(license.FeatureChestESP) {
+		moduleHandler.RegisterModule(&modules.ClientModule{
+			Identifier:  modules.ModuleChestESP,
+			Description: []string{"Отныне ты можешь видеть сундуки через стены"},
 		})
 	}
 

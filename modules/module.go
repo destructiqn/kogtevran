@@ -19,6 +19,7 @@ const (
 	ModuleUnlimitedCPS  = "UnlimitedCPS"
 	ModuleTPAura        = "TPAura"
 	ModulePlayerESP     = "PlayerESP"
+	ModuleChestESP		= "ChestESP"
 	ModuleNuker         = "Nuker"
 	ModuleFastBreak     = "FastBreak"
 	ModuleNoBadEffects  = "NoBadEffects"
