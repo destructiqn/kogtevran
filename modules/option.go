@@ -2,6 +2,7 @@ package modules
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/destructiqn/kogtevran/generic"
 )
@@ -28,6 +29,8 @@ func SetOptionValue(module generic.Module, name string, newValue interface{}) bo
 }
 
 func getField(value reflect.Value, name string) (reflect.StructField, reflect.Value, bool) {
+	name = strings.ToLower(name)
+
 	if value.Kind() != reflect.Ptr {
 		panic("not pointer value was passed to getField")
 	}
@@ -51,7 +54,7 @@ func getField(value reflect.Value, name string) (reflect.StructField, reflect.Va
 			continue
 		}
 
-		if tag == name {
+		if strings.ToLower(tag) == name {
 			return field, value.Field(i), true
 		}
 	}

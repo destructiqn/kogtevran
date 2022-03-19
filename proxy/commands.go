@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/destructiqn/kogtevran/minecraft"
 	"log"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/minecraft"
 	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
 	"github.com/destructiqn/kogtevran/minecraft/protocol"
 	"github.com/destructiqn/kogtevran/modules"
@@ -26,7 +26,7 @@ var Commands = map[string]CommandHandler{
 			return errors.New("not enough args")
 		}
 
-		module, ok := tunnel.GetModuleHandler().GetModule(args[0])
+		module, ok := tunnel.GetModuleHandler().GetModule(modules.NormalizeModuleName(args[0]))
 		if !ok {
 			return errors.New("unknown module")
 		}
@@ -40,7 +40,7 @@ var Commands = map[string]CommandHandler{
 			return errors.New("not enough args")
 		}
 
-		module, ok := tunnel.GetModuleHandler().GetModule(args[0])
+		module, ok := tunnel.GetModuleHandler().GetModule(modules.NormalizeModuleName(args[0]))
 		if !ok {
 			return errors.New("unknown module")
 		}
@@ -59,7 +59,7 @@ var Commands = map[string]CommandHandler{
 		case string:
 			newValue = strings.Join(args[2:], " ")
 		case bool:
-			newValue = args[2] == "true" || args[2] == "1"
+			newValue = strings.ToLower(args[2]) == "true" || args[2] == "1"
 		case float64:
 			newValue, err = strconv.ParseFloat(args[2], 64)
 		case time.Duration:
@@ -275,7 +275,7 @@ var Commands = map[string]CommandHandler{
 			return errors.New("invalid key")
 		}
 
-		module, ok := tunnel.GetModuleHandler().GetModule(args[1])
+		module, ok := tunnel.GetModuleHandler().GetModule(modules.NormalizeModuleName(args[1]))
 		if !ok {
 			return errors.New("unknown module")
 		}
@@ -309,7 +309,7 @@ func HandleCommand(message string, tunnel generic.Tunnel) bool {
 	}
 	parts := strings.Split(message, " ")
 	command := strings.ToLower(strings.TrimPrefix(parts[0], "/"))
-	handler, ok := Commands[command]
+	handler, ok := Commands[strings.ToLower(command)]
 	if !ok {
 		return false
 	}
