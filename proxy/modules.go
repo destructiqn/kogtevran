@@ -242,14 +242,12 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 		moduleHandler.RegisterModule(&tpaura.TPAura{SearchRadius: 20, TeleportRadius: 4, SimpleTickingModule: tpAuraTicking})
 	}
 
-	if tunnel.HasFeature(license.FeaturePlayerESP) {
+	if tunnel.HasFeature(license.FeatureESP) {
 		moduleHandler.RegisterModule(&modules.ClientModule{
 			Identifier:  modules.ModulePlayerESP,
 			Description: []string{"Отныне ты можешь видеть игроков через стены"},
 		})
-	}
 
-	if tunnel.HasFeature(license.FeatureChestESP) {
 		moduleHandler.RegisterModule(&modules.ClientModule{
 			Identifier:  modules.ModuleChestESP,
 			Description: []string{"Отныне ты можешь видеть сундуки через стены"},
