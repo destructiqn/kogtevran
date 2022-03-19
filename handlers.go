@@ -3,8 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/destructiqn/kogtevran/modules/fastbreak"
-	"github.com/destructiqn/kogtevran/modules/nobadeffects"
 	"log"
 	"net"
 	"strconv"
@@ -17,8 +15,10 @@ import (
 	"github.com/destructiqn/kogtevran/proxy"
 
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
+	"github.com/destructiqn/kogtevran/modules/fastbreak"
 	"github.com/destructiqn/kogtevran/modules/flight"
 	"github.com/destructiqn/kogtevran/modules/longjump"
+	"github.com/destructiqn/kogtevran/modules/nobadeffects"
 	"github.com/destructiqn/kogtevran/modules/nofall"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 
@@ -203,6 +203,10 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 	}
 
 	if tunnelPair.License == nil || !tunnelPair.License.IsRelated(tunnel) {
+		if tunnelPair.License != nil {
+			log.Println("unrelated license: got license data", tunnelPair.License, "for connection from", tunnel.GetRemoteAddr())
+		}
+
 		minecraftTunnel.Disconnect(chat.Text("license validation failure"))
 		return generic.RejectPacket(), nil
 	}

@@ -77,6 +77,7 @@ func main() {
 
 func pipe(conn *proxy.MinecraftTunnel, typ int) {
 	defer func() {
+		conn.Close()
 		err := recover()
 		if err != nil {
 			log.Println(err)
@@ -157,7 +158,6 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 
 	if err != nil {
 		log.Println("error in", direction, "connection:", err)
-		conn.Close()
 	}
 }
 
