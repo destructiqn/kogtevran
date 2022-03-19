@@ -51,19 +51,21 @@ func main() {
 
 	proxyServer, err := net.ListenMC("0.0.0.0:25565")
 	if err != nil {
-		panic(err)
+		log.Fatalln("error starting proxy listener")
 	}
 
 	log.Println("server is now listening for connections")
 	for {
 		client, err := proxyServer.Accept()
 		if err != nil {
-			panic(err)
+			log.Println("error accepting connection:", err)
+			continue
 		}
 
 		server, err := net.DialMC(GetRemoteAddr())
 		if err != nil {
-			panic(err)
+			log.Println("error connecting to vimeworld:", err)
+			continue
 		}
 
 		conn := proxy.WrapConn(server, &client)
