@@ -126,46 +126,78 @@ func (m *ModuleHandler) UpdateModule(module generic.Module) error {
 }
 
 func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
+	y := 25
 	modulesDisplay := make([]string, 0)
 	modulesControls := make([]map[string]interface{}, 0)
 
-	x, y := 10, 20
-	modulesList := ModuleList(m.GetModules())
-	sort.Sort(modulesList)
+	categories := modules.GetCategoryList()
+	sort.Sort(categories)
 
-	for _, module := range modulesList {
-		control := map[string]interface{}{
-			"id":      fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
-			"type":    "Button",
-			"pos":     "BOTTOM_RIGHT",
-			"w":       85,
-			"h":       20,
-			"t":       module.GetIdentifier(),
-			"tc":      0xAAAAAA,
-			"hc":      0x5555FF,
-			"x":       x,
-			"y":       y,
-			"tooltip": module.GetDescription(),
-			"color":   -0x33000000,
-			"click": map[string]interface{}{
-				"act":  "CHAT",
-				"data": fmt.Sprintf("/toggle %s", module.GetIdentifier()),
-			},
+	for _, category := range categories {
+		x := 10
+		modulesList := make(ModuleList, 0)
+
+		for _, moduleID := range category.ModuleIDs {
+			if module, ok := m.GetModule(moduleID); ok {
+				modulesList = append(modulesList, module)
+			}
 		}
 
-		x += 90
-		if x > 300 {
-			y += 25
-			x = 10
+		sort.Sort(modulesList)
+
+		modulesControls = append(modulesControls, map[string]interface{}{
+			"id":     fmt.Sprintf("kv.cc.%s.bg", category),
+			"pos":    "BOTTOM_RIGHT",
+			"type":   "Rectangle",
+			"width":  len(modulesList)*90 + 8,
+			"height": 48,
+			"color":  -0x80000000,
+			"x":      4,
+			"y":      y - 6,
+		})
+
+		for _, module := range modulesList {
+			control := map[string]interface{}{
+				"id":    fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
+				"type":  "Button",
+				"pos":   "BOTTOM_RIGHT",
+				"w":     85,
+				"h":     20,
+				"t":     module.GetIdentifier(),
+				"tc":    0xAAAAAA,
+				"hc":    0x5555FF,
+				"x":     x,
+				"y":     y,
+				"tooltip": module.GetDescription(),
+				"color": -0x33000000,
+				"click": map[string]interface{}{
+					"act":  "CHAT",
+					"data": fmt.Sprintf("/toggle %s", module.GetIdentifier()),
+				},
+			}
+
+			modulesControls = append(modulesControls, control)
+
+			if module.IsEnabled() {
+				modulesDisplay = append(modulesDisplay, module.GetIdentifier())
+				control["tc"] = 0xFFFFFF
+				control["color"] = -0xABAB01
+			}
+
+			x += 90
 		}
 
-		modulesControls = append(modulesControls, control)
+		modulesControls = append(modulesControls, map[string]interface{}{
+			"id":   fmt.Sprintf("kv.cc.%s", category),
+			"type": "Text",
+			"al":   "RIGHT",
+			"pos":  "BOTTOM_RIGHT",
+			"text": []string{category.Name},
+			"x":    10,
+			"y":    y + 25,
+		})
 
-		if module.IsEnabled() {
-			modulesDisplay = append(modulesDisplay, module.GetIdentifier())
-			control["tc"] = 0xFFFFFF
-			control["color"] = -0xABAB01
-		}
+		y += 56
 	}
 
 	return []map[string]interface{}{
