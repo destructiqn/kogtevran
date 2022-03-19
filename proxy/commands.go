@@ -1,11 +1,14 @@
 package proxy
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"github.com/destructiqn/kogtevran/minecraft"
 	"log"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/Tnze/go-mc/chat"
@@ -260,6 +263,43 @@ var Commands = map[string]CommandHandler{
 				chat.TranslateMsg(fmt.Sprintf("gameMode.%s", translation)),
 			), protocol.ChatPositionSystemMessage,
 		)
+	},
+
+	"bind": func(args []string, tunnel generic.Tunnel) error {
+		if len(args) < 2 {
+			return errors.New("not enough args")
+		}
+
+		key := minecraft.GetKeyByName(args[0])
+		if key == 0 {
+			return errors.New("invalid key")
+		}
+
+		module, ok := tunnel.GetModuleHandler().GetModule(args[1])
+		if !ok {
+			return errors.New("unknown module")
+		}
+
+		script, err := template.ParseFiles("texteria/bindings.js")
+		if err != nil {
+			return err
+		}
+
+		scriptContext := map[string]string{
+			"ModuleIdentifier": module.GetIdentifier(),
+		}
+
+		buffer := &bytes.Buffer{}
+		err = script.Execute(buffer, scriptContext)
+		if err != nil {
+			return err
+		}
+
+		return tunnel.GetTexteriaHandler().SendClient(map[string]interface{}{
+			"%":      "keyboard:add",
+			"key":    key,
+			"script": string(buffer.Bytes()),
+		})
 	},
 }
 

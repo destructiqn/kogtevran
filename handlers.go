@@ -69,6 +69,9 @@ var (
 			protocol.ServerboundPlayerAbilities: WrapPacketHandlers(&protocol.ServerPlayerAbilities{},
 				proxy.HandleServerPlayerAbilities,
 			),
+			protocol.ServerboundPluginMessage: WrapPacketHandlers(&protocol.PluginMessage{},
+				HandlePluginMessage("Texteria", proxy.HandleKeyboardPacketCandidate),
+			),
 		},
 	}
 
@@ -125,9 +128,6 @@ var (
 			protocol.ClientboundPlayerAbilities: WrapPacketHandlers(&protocol.PlayerAbilities{},
 				flight.HandlePlayerAbilities,
 			),
-			//protocol.ClientboundPluginMessage: WrapPacketHandlers(&protocol.PluginMessage{},
-			//	HandlePluginMessage("Texteria", proxy.HandleClientboundTexteriaPacket),
-			//),
 			protocol.ClientboundDisconnect: WrapPacketHandlers(&protocol.Disconnect{},
 				HandleDisconnect,
 			),
