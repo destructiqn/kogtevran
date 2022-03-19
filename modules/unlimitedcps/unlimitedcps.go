@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 	"github.com/destructiqn/kogtevran/modules"
-	"github.com/destructiqn/kogtevran/protocol"
 )
 
 type UnlimitedCPS struct {

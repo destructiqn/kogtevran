@@ -2,9 +2,9 @@ package nobadeffects
 
 import (
 	"github.com/destructiqn/kogtevran/generic"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 	"github.com/destructiqn/kogtevran/modules"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
 )
 
 var BadEffects = map[pk.Byte]bool{

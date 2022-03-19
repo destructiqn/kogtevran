@@ -1,6 +1,6 @@
 package net
 
-import pk "github.com/destructiqn/kogtevran/net/packet"
+import pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
 
 type Writer interface {
 	WritePacket(p pk.Packet) error

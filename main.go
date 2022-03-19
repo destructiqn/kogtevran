@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/destructiqn/kogtevran/metrics"
-	"github.com/destructiqn/kogtevran/net"
-	"github.com/destructiqn/kogtevran/net/CFB8"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/destructiqn/kogtevran/minecraft/net"
+	"github.com/destructiqn/kogtevran/minecraft/net/CFB8"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 	"github.com/destructiqn/kogtevran/proxy"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

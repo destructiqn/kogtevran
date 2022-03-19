@@ -10,8 +10,8 @@ import (
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/metrics"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 	"github.com/destructiqn/kogtevran/proxy"
 
 	"github.com/destructiqn/kogtevran/modules/antiknockback"

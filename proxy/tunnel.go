@@ -9,9 +9,9 @@ import (
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/license"
 	"github.com/destructiqn/kogtevran/metrics"
-	mcnet "github.com/destructiqn/kogtevran/net"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
+	mcnet "github.com/destructiqn/kogtevran/minecraft/net"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

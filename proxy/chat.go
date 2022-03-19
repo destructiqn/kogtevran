@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"github.com/Tnze/go-mc/chat"
-	pk "github.com/destructiqn/kogtevran/net/packet"
-	"github.com/destructiqn/kogtevran/protocol"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 )
 
 type ChatHandler struct {

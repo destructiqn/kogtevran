@@ -5,7 +5,7 @@ import (
 
 	"github.com/destructiqn/kogtevran/generic"
 	"github.com/destructiqn/kogtevran/minecraft"
-	"github.com/destructiqn/kogtevran/protocol"
+	"github.com/destructiqn/kogtevran/minecraft/protocol"
 )
 
 type EntityHandler struct {

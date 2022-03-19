@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	pk "github.com/destructiqn/kogtevran/net/packet"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
 )
 
 const (

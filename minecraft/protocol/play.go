@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"github.com/Tnze/go-mc/chat"
-	pk "github.com/destructiqn/kogtevran/net/packet"
+	pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
 )
 
 const (

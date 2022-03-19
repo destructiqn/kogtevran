@@ -1,6 +1,6 @@
 package generic
 
-import pk "github.com/destructiqn/kogtevran/net/packet"
+import pk "github.com/destructiqn/kogtevran/minecraft/net/packet"
 
 type HandlerResult struct {
 	ShouldPass bool
