@@ -1,36 +1,39 @@
 package proxy
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/destructiqn/kogtevran/license"
-	"github.com/destructiqn/kogtevran/modules/fastbreak"
-	"github.com/destructiqn/kogtevran/modules/longjump"
-	"github.com/destructiqn/kogtevran/modules/nobadeffects"
-	"github.com/destructiqn/kogtevran/modules/nuker"
-	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 	"log"
 	"sort"
+	"text/template"
 	"time"
 
 	"github.com/destructiqn/kogtevran/generic"
+	"github.com/destructiqn/kogtevran/license"
 	"github.com/destructiqn/kogtevran/modules"
 
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
 	"github.com/destructiqn/kogtevran/modules/aura"
 	"github.com/destructiqn/kogtevran/modules/cmdcam"
+	"github.com/destructiqn/kogtevran/modules/fastbreak"
 	"github.com/destructiqn/kogtevran/modules/flight"
+	"github.com/destructiqn/kogtevran/modules/longjump"
+	"github.com/destructiqn/kogtevran/modules/nobadeffects"
 	"github.com/destructiqn/kogtevran/modules/nofall"
+	"github.com/destructiqn/kogtevran/modules/nuker"
 	"github.com/destructiqn/kogtevran/modules/spammer"
 	"github.com/destructiqn/kogtevran/modules/tpaura"
+	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
 
 type ModuleHandler struct {
-	tunnel  *MinecraftTunnel
-	modules map[string]generic.Module
+	tunnel                *MinecraftTunnel
+	modules               map[string]generic.Module
+	initializedCategories map[string]bool
 }
 
 func NewModuleHandler(tunnel *MinecraftTunnel) *ModuleHandler {
-	return &ModuleHandler{tunnel, make(map[string]generic.Module)}
+	return &ModuleHandler{tunnel, make(map[string]generic.Module), make(map[string]bool)}
 }
 
 func (m *ModuleHandler) RegisterModule(module generic.Module) {
@@ -125,16 +128,41 @@ func (m *ModuleHandler) UpdateModule(module generic.Module) error {
 	return module.Update()
 }
 
+const (
+	moduleMargin       = 8
+	moduleButtonHeight = 20
+	moduleButtonWidth  = 85
+
+	categoryMargin = 16
+	categoryWidth  = categoryMargin + moduleButtonWidth
+
+	categoryTitleHeight = 16
+	headerHeight        = moduleMargin * 3
+)
+
 func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
-	y := 25
+	x := categoryMargin * 10
 	modulesDisplay := make([]string, 0)
-	modulesControls := make([]map[string]interface{}, 0)
+	elements := make([]map[string]interface{}, 0)
 
 	categories := modules.GetCategoryList()
 	sort.Sort(categories)
 
+	script, err := template.ParseFiles("texteria/gui.js")
+	if err != nil {
+		return nil
+	}
+
+	scriptContext := map[string]string{}
+
+	buffer := &bytes.Buffer{}
+	err = script.Execute(buffer, scriptContext)
+	if err != nil {
+		return nil
+	}
+
 	for _, category := range categories {
-		x := 10
+		y := headerHeight + moduleMargin*3 + 4
 		modulesList := make(ModuleList, 0)
 
 		for _, moduleID := range category.ModuleIDs {
@@ -144,39 +172,74 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 		}
 
 		sort.Sort(modulesList)
+		categoryControlID := fmt.Sprintf("kv.cc.%s.bg", category.Name)
+		categoryHeight := moduleMargin*2 + categoryTitleHeight + len(modulesList)*(moduleButtonHeight+moduleMargin)
 
-		modulesControls = append(modulesControls, map[string]interface{}{
-			"id":     fmt.Sprintf("kv.cc.%s.bg", category),
-			"pos":    "BOTTOM_RIGHT",
-			"type":   "Rectangle",
-			"width":  len(modulesList)*90 + 8,
-			"height": 48,
-			"color":  -0x80000000,
-			"x":      4,
-			"y":      y - 6,
-		})
+		if _, ok := m.initializedCategories[category.Name]; !ok {
+			elements = append(elements, map[string]interface{}{
+				/* Category Background */
+				"id":     categoryControlID,
+				"pos":    "TOP_LEFT",
+				"type":   "Rectangle",
+				"width":  categoryWidth,
+				"height": categoryHeight,
+				"color":  -0x80000000,
+				"x":      x,
+				"y":      categoryMargin * 4,
+				"script": string(buffer.Bytes()),
+				"click": map[string]interface{}{
+					"act": "SCRIPT",
+				},
+			}, map[string]interface{}{
+				/* Category Header */
+				"id":         fmt.Sprintf("kv.cc.%s.head", category.Name),
+				"pos":        "TOP_RIGHT",
+				"type":       "Rectangle",
+				"width":      categoryWidth,
+				"height":     headerHeight,
+				"color":      -0xABAB01,
+				"x":          -categoryWidth,
+				"y":          3 * moduleMargin,
+				"attach.to":  categoryControlID,
+				"attach.loc": "TOP_RIGHT",
+			}, map[string]interface{}{
+				/* Category Title */
+				"id":         fmt.Sprintf("kv.cc.%s", category),
+				"type":       "Text",
+				"al":         "LEFT",
+				"attach.to":  categoryControlID,
+				"attach.loc": "TOP_RIGHT",
+				"text":       []string{category.Name},
+				"x":          moduleMargin - categoryWidth,
+				"y":          2*moduleMargin + 1,
+			})
+
+			m.initializedCategories[category.Name] = true
+		}
 
 		for _, module := range modulesList {
 			control := map[string]interface{}{
-				"id":    fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
-				"type":  "Button",
-				"pos":   "BOTTOM_RIGHT",
-				"w":     85,
-				"h":     20,
-				"t":     module.GetIdentifier(),
-				"tc":    0xAAAAAA,
-				"hc":    0x5555FF,
-				"x":     x,
-				"y":     y,
-				"tooltip": module.GetDescription(),
-				"color": -0x33000000,
+				/* Module Button */
+				"id":         fmt.Sprintf("kv.mc.%s", module.GetIdentifier()),
+				"type":       "Button",
+				"w":          moduleButtonWidth,
+				"h":          moduleButtonHeight,
+				"t":          module.GetIdentifier(),
+				"tc":         0xAAAAAA,
+				"hc":         0x5555FF,
+				"x":          moduleMargin - categoryWidth,
+				"y":          y,
+				"tooltip":    module.GetDescription(),
+				"color":      -0x33000000,
+				"attach.to":  categoryControlID,
+				"attach.loc": "TOP_RIGHT",
 				"click": map[string]interface{}{
 					"act":  "CHAT",
 					"data": fmt.Sprintf("/toggle %s", module.GetIdentifier()),
 				},
 			}
 
-			modulesControls = append(modulesControls, control)
+			elements = append(elements, control)
 
 			if module.IsEnabled() {
 				modulesDisplay = append(modulesDisplay, module.GetIdentifier())
@@ -184,20 +247,10 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 				control["color"] = -0xABAB01
 			}
 
-			x += 90
+			y += moduleMargin + moduleButtonHeight
 		}
 
-		modulesControls = append(modulesControls, map[string]interface{}{
-			"id":   fmt.Sprintf("kv.cc.%s", category),
-			"type": "Text",
-			"al":   "RIGHT",
-			"pos":  "BOTTOM_RIGHT",
-			"text": []string{category.Name},
-			"x":    10,
-			"y":    y + 25,
-		})
-
-		y += 56
+		x += categoryMargin + categoryWidth
 	}
 
 	return []map[string]interface{}{
@@ -225,7 +278,7 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 		},
 		{
 			"%": "add:group",
-			"e": modulesControls,
+			"e": elements,
 			"vis": []map[string]interface{}{
 				{
 					"type": "chat",

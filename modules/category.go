@@ -14,7 +14,7 @@ var Categories = map[string][]string{
 	CategoryMovement: {ModuleFlight, ModuleLongJump},
 	CategoryPlayer:   {ModuleNoFall, ModuleChestStealer, ModuleNoBadEffects, ModuleUnlimitedCPS},
 	CategoryWorld:    {ModuleFastBreak, ModuleNuker},
-	CategoryVisual:   {ModulePlayerESP},
+	CategoryVisual:   {ModulePlayerESP, ModuleChestESP},
 	CategoryMisc:     {ModuleSpammer, ModuleCMDCam},
 }
 
