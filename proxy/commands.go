@@ -33,7 +33,7 @@ var Commands = map[string]CommandHandler{
 	},
 
 	"set": func(args []string, tunnel generic.Tunnel) error {
-		if len(args) < 1 {
+		if len(args) < 3 {
 			return errors.New("not enough args")
 		}
 
@@ -119,7 +119,7 @@ var Commands = map[string]CommandHandler{
 	},
 
 	"location": func(args []string, tunnel generic.Tunnel) error {
-		log.Println(*tunnel.GetPlayerHandler().GetLocation())
+		log.Println(tunnel.GetPlayerHandler().GetLocation())
 		return nil
 	},
 
