@@ -213,6 +213,8 @@ func HandleLoginStart(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 
 	tunnelPair.Primary = minecraftTunnel
 	minecraftTunnel.TunnelPair = tunnelPair
+	minecraftTunnel.PairID = id
+
 	proxy.RegisterDefaultModules(minecraftTunnel)
 	proxy.UpdateConnectionMetrics()
 

@@ -38,13 +38,19 @@ type AuxiliaryChannel struct {
 	TunnelPair    *TunnelPair
 	lastKeepAlive *time.Time
 	close         chan bool
+	closed        bool
 }
 
 func (c *AuxiliaryChannel) Close() error {
+	if c.closed {
+		return nil
+	}
+
 	go func() {
 		c.close <- true
 	}()
 
+	c.closed = true
 	return c.Conn.Close()
 }
 

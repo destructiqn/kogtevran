@@ -44,7 +44,7 @@ func (p *TunnelPool) RegisterPair(id TunnelPairID, pair *TunnelPair) {
 }
 
 func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
-	tunnel, ok := p.GetPair(id)
+	pair, ok := p.GetPair(id)
 	if !ok {
 		return
 	}
@@ -53,7 +53,13 @@ func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
 	delete(p.pool, id)
 	p.Unlock()
 
-	tunnel.SessionID = ""
+	pair.SessionID = ""
+	_ = pair.Auxiliary.Close()
+	pair.Auxiliary = nil
+
+	pair.Primary.Close()
+	pair.Primary = nil
+
 	UpdateConnectionMetrics()
 }
 
@@ -147,6 +153,10 @@ func (t *MinecraftTunnel) GetRemoteAddr() string {
 }
 
 func (t *MinecraftTunnel) Close() {
+	if t.Closed {
+		return
+	}
+
 	for _, module := range t.GetModuleHandler().GetModules() {
 		module.Close()
 	}
