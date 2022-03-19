@@ -34,8 +34,10 @@ const (
 const KeepAliveInterval = 20 * time.Second
 
 type AuxiliaryChannel struct {
+	PairID     TunnelPairID
+	TunnelPair *TunnelPair
+
 	Conn          *websocket.Conn
-	TunnelPair    *TunnelPair
 	lastKeepAlive *time.Time
 	close         chan bool
 	closed        bool
@@ -51,6 +53,7 @@ func (c *AuxiliaryChannel) Close() error {
 	}()
 
 	c.closed = true
+	CurrentTunnelPool.UnregisterPair(c.PairID)
 	return c.Conn.Close()
 }
 
@@ -141,6 +144,7 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			RemoteAddr: host,
 		}
 
+		c.PairID = id
 		c.TunnelPair = pair
 		CurrentTunnelPool.RegisterPair(id, pair)
 	case EncryptionDataResponse:

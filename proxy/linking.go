@@ -47,11 +47,16 @@ func (p *TunnelPool) UnregisterPair(id TunnelPairID) {
 	p.Unlock()
 
 	pair.SessionID = ""
-	_ = pair.Auxiliary.Close()
-	pair.Auxiliary = nil
 
-	pair.Primary.Close()
-	pair.Primary = nil
+	if pair.Auxiliary != nil {
+		_ = pair.Auxiliary.Close()
+		pair.Auxiliary = nil
+	}
+
+	if pair.Primary != nil {
+		pair.Primary.Close()
+		pair.Primary = nil
+	}
 
 	UpdateConnectionMetrics()
 }
