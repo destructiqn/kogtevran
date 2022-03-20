@@ -11,10 +11,13 @@ import (
 	"github.com/destructiqn/kogtevran/license"
 	"github.com/destructiqn/kogtevran/modules"
 	"github.com/gorilla/websocket"
+	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/mapstructure"
 )
 
 type AuxiliaryOperationCode int
+
+var AuxiliaryClientVersion = version.MustConstraints(version.NewConstraint(">= 1.0"))
 
 // Clientbound Operations
 const (
@@ -124,6 +127,15 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			return err
 		}
 
+		ver, err := version.NewVersion(handshake.Version)
+		if err != nil {
+			return err
+		}
+
+		if !AuxiliaryClientVersion.Check(ver) {
+			return errors.New("unsupported client version")
+		}
+
 		licenseData, err := license.GetLicense(handshake.AuthKey)
 		if err != nil {
 			return err
@@ -196,6 +208,7 @@ type WebsocketMessage struct {
 type AuxiliaryHandshake struct {
 	Username string `json:"username"`
 	AuthKey  string `json:"authKey"`
+	Version  string `json:"version"`
 }
 
 type AuxiliaryEncryptionData struct {
