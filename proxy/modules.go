@@ -110,6 +110,10 @@ func (m *ModuleHandler) ToggleModule(module generic.Module) (bool, error) {
 		return module.IsEnabled(), m.UpdateModule(module)
 	} else {
 		auxiliary := m.tunnel.TunnelPair.Auxiliary
+		if auxiliary == nil {
+			return module.IsEnabled(), nil
+		}
+
 		err := auxiliary.SendMessage(ModuleToggle, AuxiliaryToggleModule{module.GetIdentifier()})
 		if err != nil {
 			return module.IsEnabled(), err

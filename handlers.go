@@ -230,6 +230,10 @@ func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (res
 		return
 	}
 
+	if minecraftTunnel.TunnelPair == nil || minecraftTunnel.TunnelPair.Auxiliary == nil {
+		return
+	}
+
 	err = minecraftTunnel.TunnelPair.Auxiliary.SendMessage(proxy.EncryptionDataRequest, proxy.AuxiliaryEncryptionRequest{
 		PublicKey: encryptionRequest.PublicKey,
 		ServerID:  string(encryptionRequest.ServerID),

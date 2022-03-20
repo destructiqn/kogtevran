@@ -166,7 +166,7 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			return err
 		}
 
-		if c.TunnelPair == nil {
+		if c.TunnelPair == nil || c.TunnelPair.Primary == nil {
 			return errors.New("cannot find corresponding minecraft tunnel")
 		}
 
@@ -178,7 +178,7 @@ func (c *AuxiliaryChannel) HandleMessage(message *WebsocketMessage) error {
 			return err
 		}
 
-		if c.TunnelPair == nil {
+		if c.TunnelPair == nil || c.TunnelPair.Primary == nil {
 			return errors.New("cannot find corresponding minecraft tunnel")
 		}
 

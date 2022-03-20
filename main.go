@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/destructiqn/kogtevran/metrics"
@@ -81,6 +82,7 @@ func pipe(conn *proxy.MinecraftTunnel, typ int) {
 		err := recover()
 		if err != nil {
 			log.Println(err)
+			debug.PrintStack()
 		}
 	}()
 
