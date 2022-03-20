@@ -199,7 +199,7 @@ type AuxiliaryHandshake struct {
 }
 
 type AuxiliaryEncryptionData struct {
-	SharedSecret [][]byte `mapstructure:"candidates"`
+	SharedSecret []byte `mapstructure:"sharedSecret"`
 }
 
 type AuxiliaryToggleModule struct {
@@ -209,6 +209,11 @@ type AuxiliaryToggleModule struct {
 type AuxiliaryToggleModuleAck struct {
 	Identifier string `json:"identifier"`
 	Status     bool   `json:"status"`
+}
+
+type AuxiliaryEncryptionRequest struct {
+	PublicKey []byte `json:"publicKey"`
+	ServerID  string `json:"serverID"`
 }
 
 var WebsocketUpgrader = websocket.Upgrader{

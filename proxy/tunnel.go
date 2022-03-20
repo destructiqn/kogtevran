@@ -26,12 +26,9 @@ type MinecraftTunnel struct {
 	ServerWrite sync.Mutex
 	ClientWrite sync.Mutex
 
-	State                  protocol.ConnectionState
-	VerifyToken            []byte
-	KeyBruteMode           bool
-	SharedSecretCandidates [][]byte
-	EnableEncryptionS2C    chan []byte
-	EnableEncryptionC2S    chan [][]byte
+	State               protocol.ConnectionState
+	EnableEncryptionS2C chan []byte
+	EnableEncryptionC2S chan []byte
 
 	InventoryHandler *InventoryHandler
 	TexteriaHandler  *TexteriaHandler
@@ -119,7 +116,7 @@ func WrapConn(server, client *mcnet.Conn) *MinecraftTunnel {
 		Server:              server,
 		Client:              client,
 		EnableEncryptionS2C: make(chan []byte),
-		EnableEncryptionC2S: make(chan [][]byte),
+		EnableEncryptionC2S: make(chan []byte),
 	}
 
 	tunnel.InventoryHandler = NewInventoryHandler()

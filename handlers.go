@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -231,7 +230,10 @@ func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (res
 		return
 	}
 
-	err = minecraftTunnel.TunnelPair.Auxiliary.SendMessage(proxy.EncryptionDataRequest, nil)
+	err = minecraftTunnel.TunnelPair.Auxiliary.SendMessage(proxy.EncryptionDataRequest, proxy.AuxiliaryEncryptionRequest{
+		PublicKey: encryptionRequest.PublicKey,
+		ServerID:  string(encryptionRequest.ServerID),
+	})
 	if err != nil {
 		return
 	}
@@ -245,36 +247,16 @@ func HandleEncryptionRequest(packet protocol.Packet, tunnel generic.Tunnel) (res
 func HandleEncryptionResponse(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	minecraftTunnel := tunnel.(*proxy.MinecraftTunnel)
 	encryptionResponse := packet.(*protocol.EncryptionResponse)
-	candidates := <-minecraftTunnel.EnableEncryptionC2S
-
-	var key []byte
-	found := false
-
-	for _, candidate := range candidates {
-		_, decrypt := newSymmetricEncryption(candidate)
-		verifyToken := make([]byte, len(minecraftTunnel.VerifyToken))
-		decrypt.XORKeyStream(verifyToken, minecraftTunnel.VerifyToken)
-
-		if bytes.Compare(verifyToken, minecraftTunnel.VerifyToken) == 0 {
-			key = candidate
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		minecraftTunnel.Disconnect(chat.Text("decryption failure"))
-		return
-	}
+	sharedSecret := <-minecraftTunnel.EnableEncryptionC2S
 
 	err = tunnel.WriteServer(encryptionResponse.Marshal())
 	if err != nil {
 		return
 	}
 
-	c2se, c2sd := newSymmetricEncryption(key)
+	c2se, c2sd := newSymmetricEncryption(sharedSecret)
 	minecraftTunnel.Client.SetCipher(c2se, c2sd)
-	minecraftTunnel.EnableEncryptionS2C <- key
+	minecraftTunnel.EnableEncryptionS2C <- sharedSecret
 
 	err = tunnel.WriteClient((&protocol.SetCompression{Threshold: CompressionThreshold}).Marshal())
 	if err != nil {
