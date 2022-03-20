@@ -156,7 +156,7 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 	m.Lock()
 	defer m.Unlock()
 
-	x := categoryMargin * 10
+	x := categoryMargin * 4
 	modulesDisplay := make([]string, 0)
 	elements := make([]map[string]interface{}, 0)
 
@@ -200,7 +200,7 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 				"height": categoryHeight,
 				"color":  -0x80000000,
 				"x":      x,
-				"y":      categoryMargin * 4,
+				"y":      categoryMargin * 8,
 				"script": string(buffer.Bytes()),
 				"click": map[string]interface{}{
 					"act": "SCRIPT",
