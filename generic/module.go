@@ -27,4 +27,5 @@ type ModuleHandler interface {
 	GetModules() []Module
 	RegisterModule(module Module)
 	ToggleModule(module Module) (bool, error)
+	Reset()
 }

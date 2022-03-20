@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"sync"
 	"text/template"
 	"time"
 
@@ -30,13 +31,17 @@ type ModuleHandler struct {
 	tunnel                *MinecraftTunnel
 	modules               map[string]generic.Module
 	initializedCategories map[string]bool
+	sync.Mutex
 }
 
 func NewModuleHandler(tunnel *MinecraftTunnel) *ModuleHandler {
-	return &ModuleHandler{tunnel, make(map[string]generic.Module), make(map[string]bool)}
+	return &ModuleHandler{tunnel: tunnel, modules: make(map[string]generic.Module), initializedCategories: make(map[string]bool)}
 }
 
 func (m *ModuleHandler) RegisterModule(module generic.Module) {
+	m.Lock()
+	defer m.Unlock()
+
 	module.Register(m.tunnel)
 	m.modules[module.GetIdentifier()] = module
 
@@ -77,6 +82,9 @@ func (m ModuleList) Swap(i, j int) {
 }
 
 func (m *ModuleHandler) GetModules() []generic.Module {
+	m.Lock()
+	defer m.Unlock()
+
 	aModules := make([]generic.Module, 0)
 	for _, module := range m.modules {
 		aModules = append(aModules, module)
@@ -145,6 +153,9 @@ const (
 )
 
 func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
+	m.Lock()
+	defer m.Unlock()
+
 	x := categoryMargin * 10
 	modulesDisplay := make([]string, 0)
 	elements := make([]map[string]interface{}, 0)
@@ -357,4 +368,8 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})
 	moduleHandler.RegisterModule(&cmdcam.CMDCam{})
+}
+
+func (m *ModuleHandler) Reset() {
+	m.initializedCategories = make(map[string]bool)
 }
