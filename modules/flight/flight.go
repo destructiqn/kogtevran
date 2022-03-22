@@ -40,10 +40,10 @@ func (f *Flight) Toggle() (bool, error) {
 func (f *Flight) Update() error {
 	flags := 0
 	if f.Enabled {
-		flags = 0x04
+		flags |= 0x04
 	}
 
-	if f.Tunnel.GetPlayerHandler().IsFlying() {
+	if f.Tunnel.GetPlayerHandler().IsFlying() && f.Enabled {
 		flags |= 0x02
 	}
 
