@@ -253,6 +253,19 @@ func (r *RemoveEntityEffect) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundRemoveEntityEffect, r.EntityID, r.EffectID)
 }
 
+type BlockChange struct {
+	Location pk.Position
+	BlockID  pk.VarInt
+}
+
+func (b *BlockChange) Read(packet pk.Packet) error {
+	return packet.Scan(&b.Location, &b.BlockID)
+}
+
+func (b *BlockChange) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundBlockChange, b.Location, b.BlockID)
+}
+
 type ChangeGameState struct {
 	Reason pk.UnsignedByte
 	Value  pk.Float

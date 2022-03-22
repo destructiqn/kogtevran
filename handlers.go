@@ -19,6 +19,7 @@ import (
 	"github.com/destructiqn/kogtevran/modules/longjump"
 	"github.com/destructiqn/kogtevran/modules/nobadeffects"
 	"github.com/destructiqn/kogtevran/modules/nofall"
+	"github.com/destructiqn/kogtevran/modules/nuker"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -111,6 +112,9 @@ var (
 			),
 			protocol.ClientboundEntityEffect: WrapPacketHandlers(&protocol.EntityEffect{},
 				nobadeffects.HandleEntityEffect,
+			),
+			protocol.ClientboundBlockChange: WrapPacketHandlers(&protocol.BlockChange{},
+				nuker.HandleBlockChange,
 			),
 			// protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
 			// 	proxy.HandleOpenWindow, cheststealer.HandleOpenWindow,

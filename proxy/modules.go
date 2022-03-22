@@ -362,7 +362,7 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 	}
 
 	if tunnel.HasFeature(license.FeatureNuker) {
-		moduleHandler.RegisterModule(&nuker.Nuker{Radius: 2, SimpleTickingModule: modules.SimpleTickingModule{Interval: time.Second}})
+		moduleHandler.RegisterModule(&nuker.Nuker{Radius: 2, Delay: 1, SimpleTickingModule: modules.SimpleTickingModule{Interval: 5 * time.Second}})
 	}
 
 	if tunnel.HasFeature(license.FeatureFastBreak) {

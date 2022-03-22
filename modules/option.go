@@ -29,6 +29,10 @@ func SetOptionValue(module generic.Module, name string, newValue interface{}) bo
 }
 
 func getField(value reflect.Value, name string) (reflect.StructField, reflect.Value, bool) {
+	defer func() {
+		recover()
+	}()
+
 	name = strings.ToLower(name)
 
 	if value.Kind() != reflect.Ptr {
