@@ -153,6 +153,8 @@ const (
 )
 
 func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
+	moduleList := m.GetModules()
+
 	m.Lock()
 	defer m.Unlock()
 
@@ -257,7 +259,6 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 			elements = append(elements, control)
 
 			if module.IsEnabled() {
-				modulesDisplay = append(modulesDisplay, module.GetIdentifier())
 				control["tc"] = 0xFFFFFF
 				control["color"] = -0xABAB01
 			}
@@ -266,6 +267,12 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 		}
 
 		x += categoryMargin + categoryWidth
+	}
+
+	for _, module := range moduleList {
+		if module.IsEnabled() {
+			modulesDisplay = append(modulesDisplay, module.GetIdentifier())
+		}
 	}
 
 	return []map[string]interface{}{
