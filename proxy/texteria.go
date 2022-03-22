@@ -94,7 +94,7 @@ func HandleClientboundTexteriaPacket(data []byte, tunnel generic.Tunnel) (result
 	return finalBuffer.Bytes(), true, err
 }
 
-func HandleKeyboardPacketCandidate(data []byte, tunnel generic.Tunnel) (result []byte, next bool, err error) {
+func HandleKeyboardPacketCandidate(data []byte, tunnel generic.Tunnel) (next bool, err error) {
 	var dataMap map[string]interface{}
 	dataMap, err = pk.ReadMap(data)
 	if err != nil {
@@ -104,14 +104,14 @@ func HandleKeyboardPacketCandidate(data []byte, tunnel generic.Tunnel) (result [
 	if dataMap["%"] == "kv:module:toggle" {
 		module, ok := tunnel.GetModuleHandler().GetModule(dataMap["module"].(string))
 		if !ok {
-			return data, true, nil
+			return true, nil
 		}
 
 		_, err = tunnel.GetModuleHandler().ToggleModule(module)
-		return nil, false, err
+		return false, err
 	}
 
-	return data, true, nil
+	return true, nil
 }
 
 func (t *TexteriaHandler) SendClient(data ...map[string]interface{}) error {

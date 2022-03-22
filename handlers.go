@@ -28,7 +28,7 @@ type RawPacketHandler func(packet *protocol.WrappedPacket, tunnel *proxy.Minecra
 type PacketHandler func(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error)
 type ProtocolStateHandler map[int32]RawPacketHandler
 type ProtocolStateHandlerPool map[protocol.ConnectionState]ProtocolStateHandler
-type PluginMessageHandler func(data []byte, tunnel generic.Tunnel) (result []byte, next bool, err error)
+type PluginMessageHandler func(data []byte, tunnel generic.Tunnel) (next bool, err error)
 
 const CompressionThreshold = 1024
 
@@ -298,28 +298,24 @@ func HandleDisconnect(packet protocol.Packet, tunnel generic.Tunnel) (result *ge
 func HandlePluginMessage(targetChannel string, handler PluginMessageHandler) PacketHandler {
 	return func(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 		var (
-			data     []byte
-			channel  string
-			packetID int32
+			data    []byte
+			channel string
 		)
 
 		switch packet.(type) {
 		case *protocol.PluginMessage:
 			pluginMessage := packet.(*protocol.PluginMessage)
 			data, channel = pluginMessage.Data, string(pluginMessage.Channel)
-			packetID = protocol.ClientboundPluginMessage
 		case *protocol.ServerPluginMessage:
 			pluginMessage := packet.(*protocol.ServerPluginMessage)
 			data, channel = pluginMessage.Data, string(pluginMessage.Channel)
-			packetID = protocol.ServerboundPluginMessage
 		}
 
 		if targetChannel == channel {
 			var next bool
-			data, next, err = handler(data, tunnel)
-			messageData := pk.PluginMessageData(data)
+			next, err = handler(data, tunnel)
 			if next {
-				return generic.ModifyPacket(pk.Marshal(packetID, pk.String(channel), &messageData)), nil
+				return generic.PassPacket(), nil
 			} else {
 				return generic.RejectPacket(), nil
 			}
