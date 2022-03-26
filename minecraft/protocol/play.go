@@ -436,6 +436,7 @@ type Disconnect struct {
 }
 
 func (d *Disconnect) Read(packet pk.Packet) error {
+	d.Reason = chat.Message{}
 	return packet.Scan(&d.Reason)
 }
 
