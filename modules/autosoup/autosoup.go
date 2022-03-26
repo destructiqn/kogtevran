@@ -117,6 +117,9 @@ func HandleUpdateHealth(_ protocol.Packet, tunnel generic.Tunnel) (result *gener
 		autoSoup := module.(*AutoSoup)
 		if tunnel.GetPlayerHandler().GetHealth() < autoSoup.MinHealth {
 			slot := autoSoup.GetSlotWithSoup()
+			if slot == 0 {
+				return generic.PassPacket(), nil
+			}
 
 			err = autoSoup.UseSoup(slot)
 			if err != nil {
