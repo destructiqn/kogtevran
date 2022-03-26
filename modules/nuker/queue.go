@@ -30,11 +30,13 @@ func (n *Nuker) handleQueue() {
 }
 
 func (n *Nuker) enqueue(task *Task) {
-	if _, ok := n.backlog[task.Location]; !ok && n.backlog != nil {
-		n.queueLock.Lock()
-		n.backlog[task.Location] = true
-		n.queueLock.Unlock()
+    n.queueLock.Lock()
+    if _, ok := n.backlog[task.Location]; !ok && n.backlog != nil {
+        n.backlog[task.Location] = true
+        n.queueLock.Unlock()
 
-		n.breakQueue <- task
-	}
+        n.breakQueue <- task
+    } else {
+        n.queueLock.Unlock()
+    }
 }

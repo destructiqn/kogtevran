@@ -39,9 +39,11 @@ func (n *Nuker) GetIdentifier() string {
 }
 
 func (n *Nuker) Toggle() (bool, error) {
-	v, err := n.SimpleTickingModule.Toggle()
-	n.toggleQueue <- v
-	return v, err
+    v, err := n.SimpleTickingModule.Toggle()
+    if n.toggleQueue != nil {
+        n.toggleQueue <- v
+    }
+    return v, err
 }
 
 func (n *Nuker) Tick() error {
@@ -58,10 +60,13 @@ func (n *Nuker) Tick() error {
 		for y := int(center.Y) - n.Radius; y <= int(center.Y)+n.Radius; y++ {
 			for z := int(center.Z) - n.Radius; z <= int(center.Z)+n.Radius; z++ {
 				position := pk.Position{X: x, Y: y, Z: z}
-
+				n.queueLock.Lock()
+				
 				if _, ok := n.backlog[position]; !ok {
-					BreakBlock(position, 0, n.Tunnel)
+				  BreakBlock(position, 0, n.Tunnel)
 				}
+								
+				n.queueLock.Unlock()
 			}
 		}
 	}
