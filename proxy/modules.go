@@ -23,6 +23,7 @@ import (
 	"github.com/destructiqn/kogtevran/modules/nofall"
 	"github.com/destructiqn/kogtevran/modules/nuker"
 	"github.com/destructiqn/kogtevran/modules/spammer"
+	"github.com/destructiqn/kogtevran/modules/speedhack"
 	"github.com/destructiqn/kogtevran/modules/tpaura"
 	"github.com/destructiqn/kogtevran/modules/unlimitedcps"
 )
@@ -371,6 +372,10 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 
 	if tunnel.HasFeature(license.FeatureNoBadEffects) {
 		moduleHandler.RegisterModule(&nobadeffects.NoBadEffects{})
+	}
+
+	if tunnel.HasFeature(license.FeatureSpeedHack) {
+		moduleHandler.RegisterModule(&speedhack.SpeedHack{Speed: 2})
 	}
 
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})

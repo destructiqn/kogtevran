@@ -19,10 +19,11 @@ const (
 	ModuleUnlimitedCPS  = "UnlimitedCPS"
 	ModuleTPAura        = "TPAura"
 	ModulePlayerESP     = "PlayerESP"
-	ModuleChestESP		= "ChestESP"
+	ModuleChestESP      = "ChestESP"
 	ModuleNuker         = "Nuker"
 	ModuleFastBreak     = "FastBreak"
 	ModuleNoBadEffects  = "NoBadEffects"
+	ModuleSpeedHack     = "SpeedHack"
 )
 
 type DefaultModule struct {

@@ -224,6 +224,20 @@ func (e *EntityTeleport) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundEntityTeleport, e.EntityID, e.X, e.Y, e.Z, e.Yaw, e.Pitch, e.OnGround)
 }
 
+type EntityMetadata struct {
+	EntityID pk.VarInt
+	Metadata pk.EntityMetadata
+}
+
+func (e *EntityMetadata) Read(packet pk.Packet) error {
+	e.Metadata = make(pk.EntityMetadata)
+	return packet.Scan(&e.EntityID, &e.Metadata)
+}
+
+func (e *EntityMetadata) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundEntityMetadata, e.EntityID, e.Metadata)
+}
+
 type EntityEffect struct {
 	EntityID      pk.VarInt
 	EffectID      pk.Byte
@@ -251,6 +265,26 @@ func (r *RemoveEntityEffect) Read(packet pk.Packet) error {
 
 func (r *RemoveEntityEffect) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundRemoveEntityEffect, r.EntityID, r.EffectID)
+}
+
+type EntityProperties struct {
+	EntityID   pk.VarInt
+	Properties []pk.Property
+}
+
+func (e *EntityProperties) Read(packet pk.Packet) error {
+	var propertiesLen pk.Int
+	return packet.Scan(&e.EntityID, &propertiesLen, &pk.Ary{
+		Len: propertiesLen,
+		Ary: &e.Properties,
+	})
+}
+
+func (e *EntityProperties) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundEntityProperties, e.EntityID, pk.Int(len(e.Properties)), pk.Ary{
+		Len: len(e.Properties),
+		Ary: e.Properties,
+	})
 }
 
 type BlockChange struct {

@@ -85,7 +85,126 @@ type (
 
 	// BitSet represents Java's BitSet, a list of bits.
 	BitSet []int64
+
+	Property struct {
+		Key       String
+		Value     Double
+		Modifiers []AttributeModifier
+	}
+
+	AttributeModifier struct {
+		UUID      UUID
+		Amount    Double
+		Operation Byte
+	}
 )
+
+func (p Property) WriteTo(w io.Writer) (n int64, err error) {
+	n, err = p.Key.WriteTo(w)
+	if err != nil {
+		return
+	}
+
+	var m int64
+	m, err = p.Value.WriteTo(w)
+	n += m
+	if err != nil {
+		return
+	}
+
+	m, err = VarInt(len(p.Modifiers)).WriteTo(w)
+	n += m
+	if err != nil {
+		return
+	}
+
+	m, err = Ary{
+		Len: len(p.Modifiers),
+		Ary: p.Modifiers,
+	}.WriteTo(w)
+	n += m
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (p *Property) ReadFrom(r io.Reader) (n int64, err error) {
+	n, err = p.Key.ReadFrom(r)
+	if err != nil {
+		return
+	}
+
+	var m int64
+	m, err = p.Value.ReadFrom(r)
+	n += m
+	if err != nil {
+		return
+	}
+
+	var modifiersLen VarInt
+	m, err = modifiersLen.ReadFrom(r)
+	n += m
+	if err != nil {
+		return
+	}
+
+	m, err = Ary{
+		Len: modifiersLen,
+		Ary: p.Modifiers,
+	}.ReadFrom(r)
+	n += m
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (a AttributeModifier) WriteTo(w io.Writer) (n int64, err error) {
+	n, err = a.UUID.WriteTo(w)
+	if err != nil {
+		return
+	}
+
+	var m int64
+	m, err = a.Amount.WriteTo(w)
+	n += m
+	if err != nil {
+		return
+	}
+
+	m, err = a.Operation.WriteTo(w)
+	n += m
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (a *AttributeModifier) ReadFrom(r io.Reader) (n int64, err error) {
+	n, err = a.UUID.ReadFrom(r)
+	if err != nil {
+		return
+	}
+
+	var m int64
+	m, err = a.Amount.ReadFrom(r)
+	n += m
+	if err != nil {
+		return
+	}
+
+	m, err = a.Operation.ReadFrom(r)
+	n += m
+	if err != nil {
+		return
+	}
+
+	return
+}
 
 const MaxVarIntLen = 5
 const MaxVarLongLen = 10
