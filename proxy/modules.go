@@ -339,7 +339,7 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 	}
 
 	if tunnel.HasFeature(license.FeatureLongJump) {
-		moduleHandler.RegisterModule(&longjump.LongJump{Power: 2})
+		moduleHandler.RegisterModule(&longjump.LongJump{Power: 2, Height: 1})
 	}
 
 	if tunnel.HasFeature(license.FeatureUnlimitedCPS) {

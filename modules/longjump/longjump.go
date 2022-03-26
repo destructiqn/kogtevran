@@ -11,7 +11,8 @@ import (
 
 type LongJump struct {
 	modules.SimpleModule
-	Power int `option:"power"`
+	Power  float64 `option:"power"`
+	Height float64 `option:"height"`
 }
 
 func (l *LongJump) GetDescription() []string {
@@ -20,6 +21,7 @@ func (l *LongJump) GetDescription() []string {
 		"",
 		"§nПараметры",
 		"§7power§f - множитель дальности прыжка",
+		"§7height§f - множитель высоты прыжка",
 	}
 }
 
@@ -29,7 +31,7 @@ func (l *LongJump) GetIdentifier() string {
 
 func (l *LongJump) Boost(yaw float64) (x int16, y int16, z int16) {
 	x = int16(-math.Sin(float64(yaw)*(math.Pi/180.0)) * float64(l.Power*5000))
-	y = int16(5000)
+	y = int16(2500 * l.Height)
 	z = int16(math.Cos(float64(yaw)*(math.Pi/180.0)) * float64(l.Power*5000))
 	return
 }
