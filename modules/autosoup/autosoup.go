@@ -24,7 +24,12 @@ func (a *AutoSoup) GetIdentifier() string {
 }
 
 func (a *AutoSoup) GetDescription() []string {
-	return []string{"Автоматически использует супы на KitPvP"}
+	return []string{
+		"Автоматически использует супы на KitPvP",
+		"",
+		"§nПараметры",
+		"§7minHealth§f - здоровье, при котором используется суп (макс. 20)",
+	}
 }
 
 func (a *AutoSoup) GetSlotWithSoup() int {
