@@ -108,9 +108,11 @@ var Commands = map[string]CommandHandler{
 	"inventory": func(args []string, tunnel generic.Tunnel) error {
 		for id, window := range tunnel.GetInventoryHandler().GetWindows() {
 			fmt.Println(id, window, ":")
+			window.Lock()
 			for slot, item := range window.GetContents() {
 				fmt.Println(slot, item)
 			}
+			window.Unlock()
 			fmt.Println("---")
 		}
 		return nil

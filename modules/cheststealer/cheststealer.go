@@ -56,6 +56,8 @@ func HandleWindowItems(packet protocol.Packet, tunnel generic.Tunnel) (result pk
 	if tunnel.GetModuleHandler().IsModuleEnabled(modules.ModuleChestStealer) {
 		window, ok := tunnel.GetInventoryHandler().GetWindow(int(windowItems.WindowID))
 		if ok && IsSuitable(window) {
+			window.Lock()
+			defer window.Unlock()
 			for slot, item := range window.GetContents() {
 				if slot >= window.GetSize()-36 {
 					break

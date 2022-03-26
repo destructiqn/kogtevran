@@ -39,8 +39,12 @@ func (a *AutoSoup) GetSlotWithSoup() int {
 	}
 
 	for _, slot := range HotbarSlots {
+		inventory.Lock()
 		if inventory.GetItem(slot).BlockID == SoupID {
+			inventory.Unlock()
 			return slot
+		} else {
+			inventory.Unlock()
 		}
 	}
 
@@ -72,6 +76,9 @@ func (a *AutoSoup) FindSoup() int {
 	if !ok {
 		return 0
 	}
+
+	inventory.Lock()
+	defer inventory.Unlock()
 
 	for slot, item := range inventory.GetContents() {
 		if item.BlockID == SoupID {

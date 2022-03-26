@@ -125,6 +125,9 @@ func (w *Window) Click(slot int, mode, button byte) error {
 }
 
 func (w *Window) Move(from, to int) error {
+	w.Lock()
+	defer w.Unlock()
+
 	if w.GetItem(from).BlockID == -1 {
 		return nil
 	}
@@ -146,9 +149,7 @@ func (w *Window) Move(from, to int) error {
 		}
 	}
 
-	w.Lock()
 	w.items[from], w.items[to] = w.items[to], w.items[from]
-	w.Unlock()
 
 	tunnel := w.handler.tunnel
 	updateSource := protocol.SetSlot{

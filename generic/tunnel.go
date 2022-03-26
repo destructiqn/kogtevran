@@ -61,6 +61,8 @@ type Window interface {
 	PutItem(slot int, item pk.Slot)
 	Click(slot int, mode, button byte) error
 	Move(from, to int) error
+	Lock()
+	Unlock()
 }
 
 type InventoryHandler interface {
