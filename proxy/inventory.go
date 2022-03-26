@@ -1,7 +1,9 @@
 package proxy
 
 import (
+	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/Tnze/go-mc/chat"
 	"github.com/destructiqn/kogtevran/generic"
@@ -10,14 +12,17 @@ import (
 )
 
 type InventoryHandler struct {
+	tunnel  *MinecraftTunnel
 	windows map[int]generic.Window
 	sync.Mutex
 }
 
-func NewInventoryHandler() *InventoryHandler {
-	return &InventoryHandler{windows: map[int]generic.Window{
-		0: NewWindow(44, "", chat.Text("Player Inventory")),
-	}}
+func NewInventoryHandler(tunnel *MinecraftTunnel) *InventoryHandler {
+	handler := &InventoryHandler{tunnel: tunnel}
+	handler.windows = map[int]generic.Window{
+		0: NewWindow(handler, 0, 44, "", chat.Text("Player Inventory")),
+	}
+	return handler
 }
 
 func (i *InventoryHandler) GetWindows() []generic.Window {
@@ -64,15 +69,17 @@ func (i *InventoryHandler) Reset() {
 }
 
 type Window struct {
-	size  int
-	wType string
-	title chat.Message
-	items map[int]pk.Slot
+	handler *InventoryHandler
+	id      byte
+	size    int
+	wType   string
+	title   chat.Message
+	items   map[int]pk.Slot
 	sync.Mutex
 }
 
-func NewWindow(size int, wType string, title chat.Message) *Window {
-	return &Window{size: size, wType: wType, title: title, items: make(map[int]pk.Slot)}
+func NewWindow(handler *InventoryHandler, id byte, size int, wType string, title chat.Message) *Window {
+	return &Window{handler: handler, id: id, size: size, wType: wType, title: title, items: make(map[int]pk.Slot)}
 }
 
 func (w *Window) GetType() string {
@@ -101,11 +108,81 @@ func (w *Window) GetItem(slot int) pk.Slot {
 	return w.items[slot]
 }
 
+func (w *Window) Click(slot int, mode, button byte) error {
+	tunnel := w.handler.tunnel
+	rand.Seed(time.Now().UnixNano())
+
+	packet := protocol.ClickWindow{
+		WindowID:     pk.UnsignedByte(w.id),
+		Slot:         pk.Short(slot),
+		Button:       pk.Byte(button),
+		ActionNumber: pk.Short(rand.Intn(100000)),
+		Mode:         pk.Byte(mode),
+		ClickedItem:  w.GetItem(slot),
+	}
+
+	return tunnel.WriteServer(packet.Marshal())
+}
+
+func (w *Window) Move(from, to int) error {
+	if w.GetItem(from).BlockID == -1 {
+		return nil
+	}
+
+	err := w.Click(from, 0, 0)
+	if err != nil {
+		return err
+	}
+
+	err = w.Click(to, 0, 0)
+	if err != nil {
+		return err
+	}
+
+	if w.GetItem(to).BlockID != -1 {
+		err = w.Click(from, 0, 0)
+		if err != nil {
+			return err
+		}
+	}
+
+	w.Lock()
+	w.items[from], w.items[to] = w.items[to], w.items[from]
+	w.Unlock()
+
+	tunnel := w.handler.tunnel
+	updateSource := protocol.SetSlot{
+		WindowID: pk.Byte(w.id),
+		Slot:     pk.Short(from),
+		SlotData: w.GetItem(from),
+	}
+
+	err = tunnel.WriteClient(updateSource.Marshal())
+	if err != nil {
+		return err
+	}
+
+	updateDestination := protocol.SetSlot{
+		WindowID: pk.Byte(w.id),
+		Slot:     pk.Short(to),
+		SlotData: w.GetItem(to),
+	}
+
+	err = tunnel.WriteClient(updateDestination.Marshal())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func HandleOpenWindow(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	openWindow := packet.(*protocol.OpenWindow)
 
-	tunnel.GetInventoryHandler().OpenWindow(int(openWindow.WindowID), NewWindow(
-		int(openWindow.NumberOfSlots), string(openWindow.WindowType), openWindow.WindowTitle),
+	inventoryHandler := tunnel.GetInventoryHandler()
+	inventoryHandler.OpenWindow(int(openWindow.WindowID), NewWindow(
+		inventoryHandler.(*InventoryHandler), byte(openWindow.WindowID), int(openWindow.NumberOfSlots),
+		string(openWindow.WindowType), openWindow.WindowTitle),
 	)
 
 	return generic.PassPacket(), nil

@@ -100,6 +100,20 @@ func (j *JoinGame) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundJoinGame, j.EntityID, j.GameMode, j.Dimension, j.Difficulty, j.MaxPlayers, j.LevelType, j.ReducedDebugInfo)
 }
 
+type UpdateHealth struct {
+	Health         pk.Float
+	Food           pk.VarInt
+	FoodSaturation pk.Float
+}
+
+func (u *UpdateHealth) Read(packet pk.Packet) error {
+	return packet.Scan(&u.Health, &u.Food, &u.FoodSaturation)
+}
+
+func (u *UpdateHealth) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundUpdateHealth, u.Health, u.Food, u.FoodSaturation)
+}
+
 type PlayerPositionAndLook struct {
 	X, Y, Z    pk.Double
 	Yaw, Pitch pk.Float
@@ -112,6 +126,18 @@ func (p *PlayerPositionAndLook) Read(packet pk.Packet) error {
 
 func (p *PlayerPositionAndLook) Marshal() pk.Packet {
 	return pk.Marshal(ClientboundPlayerPositionAndLook, p.X, p.Y, p.Z, p.Yaw, p.Pitch, p.Flags)
+}
+
+type HeldItemChange struct {
+	Slot pk.Byte
+}
+
+func (h *HeldItemChange) Read(packet pk.Packet) error {
+	return packet.Scan(&h.Slot)
+}
+
+func (h *HeldItemChange) Marshal() pk.Packet {
+	return pk.Marshal(ClientboundHeldItemChange, h.Slot)
 }
 
 type SpawnPlayer struct {
@@ -522,6 +548,35 @@ func (p *PlayerDigging) Read(packet pk.Packet) error {
 
 func (p *PlayerDigging) Marshal() pk.Packet {
 	return pk.Marshal(ServerboundPlayerDigging, p.Status, p.Location, p.Face)
+}
+
+type PlayerBlockPlacement struct {
+	Location        pk.Position
+	Face            pk.Byte
+	HeldItem        pk.Slot
+	CursorPositionX pk.Byte
+	CursorPositionY pk.Byte
+	CursorPositionZ pk.Byte
+}
+
+func (p *PlayerBlockPlacement) Read(packet pk.Packet) error {
+	return packet.Scan(&p.Location, &p.Face, &p.HeldItem, &p.CursorPositionX, &p.CursorPositionY, &p.CursorPositionZ)
+}
+
+func (p *PlayerBlockPlacement) Marshal() pk.Packet {
+	return pk.Marshal(ServerboundPlayerBlockPlacement, p.Location, p.Face, p.HeldItem, p.CursorPositionX, p.CursorPositionY, p.CursorPositionZ)
+}
+
+type ServerHeldItemChange struct {
+	Slot pk.Short
+}
+
+func (s *ServerHeldItemChange) Read(packet pk.Packet) error {
+	return packet.Scan(&s.Slot)
+}
+
+func (s *ServerHeldItemChange) Marshal() pk.Packet {
+	return pk.Marshal(ServerboundHeldItemChange, s.Slot)
 }
 
 type ServerAnimation struct{}

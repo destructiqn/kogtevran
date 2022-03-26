@@ -119,7 +119,7 @@ func WrapConn(server, client *mcnet.Conn) *MinecraftTunnel {
 		EnableEncryptionC2S: make(chan []byte),
 	}
 
-	tunnel.InventoryHandler = NewInventoryHandler()
+	tunnel.InventoryHandler = NewInventoryHandler(tunnel)
 	tunnel.TexteriaHandler = NewTexteriaHandler(tunnel)
 	tunnel.ModuleHandler = NewModuleHandler(tunnel)
 	tunnel.EntityHandler = NewEntityHandler(tunnel)

@@ -10,12 +10,14 @@ import (
 )
 
 type PlayerHandler struct {
-	tunnel     *MinecraftTunnel
-	entityID   int32
-	isFlying   bool
-	onGround   bool
-	location   *minecraft.Location
-	PlayerName string
+	tunnel      *MinecraftTunnel
+	entityID    int32
+	isFlying    bool
+	onGround    bool
+	location    *minecraft.Location
+	health      float64
+	currentSlot int
+	PlayerName  string
 }
 
 func NewPlayerHandler(tunnel *MinecraftTunnel) *PlayerHandler {
@@ -49,13 +51,37 @@ func (p *PlayerHandler) GetPlayerName() string {
 	return p.PlayerName
 }
 
+func (p *PlayerHandler) GetHealth() float64 {
+	return p.health
+}
+
+func (p *PlayerHandler) GetCurrentSlot() int {
+	return p.currentSlot
+}
+
 func (p *PlayerHandler) Attack(target int) error {
 	return p.tunnel.WriteServer(pk.Marshal(0x02, pk.VarInt(target), pk.VarInt(1)))
+}
+
+func (p *PlayerHandler) ChangeSlot(slot int) error {
+	if slot < 0 || slot > 8 {
+		return nil
+	}
+
+	server := protocol.ServerHeldItemChange{Slot: pk.Short(slot)}
+	err := p.tunnel.WriteServer(server.Marshal())
+	if err != nil {
+		return err
+	}
+
+	client := protocol.HeldItemChange{Slot: pk.Byte(slot)}
+	return p.tunnel.WriteClient(client.Marshal())
 }
 
 func HandleJoinGame(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	joinGame := packet.(*protocol.JoinGame)
 	tunnel.GetPlayerHandler().(*PlayerHandler).entityID = int32(joinGame.EntityID)
+	tunnel.GetPlayerHandler().(*PlayerHandler).health = 20
 	tunnel.GetEntityHandler().(*EntityHandler).ResetEntities()
 	tunnel.GetInventoryHandler().Reset()
 	tunnel.GetModuleHandler().Reset()
@@ -131,5 +157,17 @@ func HandleServerPlayerPositionAndLook(packet protocol.Packet, tunnel generic.Tu
 func HandleServerPlayerAbilities(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
 	playerAbilities := packet.(*protocol.ServerPlayerAbilities)
 	tunnel.GetPlayerHandler().SetFlying(playerAbilities.Flags&0x02 > 0)
+	return generic.PassPacket(), nil
+}
+
+func HandleUpdateHealth(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
+	updateHealth := packet.(*protocol.UpdateHealth)
+	tunnel.GetPlayerHandler().(*PlayerHandler).health = float64(updateHealth.Health)
+	return generic.PassPacket(), nil
+}
+
+func HandleHeldItemChange(packet protocol.Packet, tunnel generic.Tunnel) (result *generic.HandlerResult, err error) {
+	heldItemChange := packet.(*protocol.ServerHeldItemChange)
+	tunnel.GetPlayerHandler().(*PlayerHandler).currentSlot = int(heldItemChange.Slot)
 	return generic.PassPacket(), nil
 }

@@ -24,6 +24,7 @@ const (
 	ModuleFastBreak     = "FastBreak"
 	ModuleNoBadEffects  = "NoBadEffects"
 	ModuleSpeedHack     = "SpeedHack"
+	ModuleAutoSoup      = "AutoSoup"
 )
 
 type DefaultModule struct {

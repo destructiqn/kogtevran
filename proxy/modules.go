@@ -15,6 +15,7 @@ import (
 
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
 	"github.com/destructiqn/kogtevran/modules/aura"
+	"github.com/destructiqn/kogtevran/modules/autosoup"
 	"github.com/destructiqn/kogtevran/modules/cmdcam"
 	"github.com/destructiqn/kogtevran/modules/fastbreak"
 	"github.com/destructiqn/kogtevran/modules/flight"
@@ -376,6 +377,10 @@ func RegisterDefaultModules(tunnel *MinecraftTunnel) {
 
 	if tunnel.HasFeature(license.FeatureSpeedHack) {
 		moduleHandler.RegisterModule(&speedhack.SpeedHack{Speed: 2})
+	}
+
+	if tunnel.HasFeature(license.FeatureAutoSoup) {
+		moduleHandler.RegisterModule(&autosoup.AutoSoup{MinHealth: 10})
 	}
 
 	moduleHandler.RegisterModule(&spammer.Spammer{SimpleTickingModule: modules.SimpleTickingModule{Interval: 20 * time.Second}})

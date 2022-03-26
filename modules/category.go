@@ -11,7 +11,7 @@ const (
 var Categories = map[string][]string{
 	CategoryCombat:   {ModuleAntiKnockback, ModuleKillAura, ModuleMobAura, ModuleTPAura},
 	CategoryMovement: {ModuleFlight, ModuleLongJump, ModuleSpeedHack},
-	CategoryPlayer:   {ModuleNoFall, ModuleChestStealer, ModuleNoBadEffects, ModuleUnlimitedCPS},
+	CategoryPlayer:   {ModuleNoFall, ModuleChestStealer, ModuleNoBadEffects, ModuleUnlimitedCPS, ModuleAutoSoup},
 	CategoryVisual:   {ModulePlayerESP, ModuleChestESP},
 	CategoryMisc:     {ModuleSpammer, ModuleCMDCam},
 }

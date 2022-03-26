@@ -15,4 +15,5 @@ const (
 	FeatureFastBreak     Feature = 0b1000000000
 	FeatureNoBadEffects  Feature = 0b10000000000
 	FeatureSpeedHack     Feature = 0b100000000000
+	FeatureAutoSoup      Feature = 0b1000000000000
 )

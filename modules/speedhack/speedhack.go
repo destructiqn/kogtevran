@@ -12,11 +12,11 @@ type SpeedHack struct {
 	Speed float64 `option:"speed"`
 }
 
-func (s SpeedHack) GetIdentifier() string {
+func (s *SpeedHack) GetIdentifier() string {
 	return modules.ModuleSpeedHack
 }
 
-func (s SpeedHack) GetDescription() []string {
+func (s *SpeedHack) GetDescription() []string {
 	return []string{
 		"Увеличивает скорость передвижения",
 		"",

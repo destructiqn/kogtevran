@@ -14,6 +14,7 @@ import (
 	"github.com/destructiqn/kogtevran/proxy"
 
 	"github.com/destructiqn/kogtevran/modules/antiknockback"
+	"github.com/destructiqn/kogtevran/modules/autosoup"
 	"github.com/destructiqn/kogtevran/modules/fastbreak"
 	"github.com/destructiqn/kogtevran/modules/flight"
 	"github.com/destructiqn/kogtevran/modules/longjump"
@@ -64,6 +65,9 @@ var (
 			protocol.ServerboundPlayerDigging: WrapPacketHandlers(&protocol.PlayerDigging{},
 				fastbreak.HandlePlayerDigging,
 			),
+			protocol.ServerboundHeldItemChange: WrapPacketHandlers(&protocol.ServerHeldItemChange{},
+				proxy.HandleHeldItemChange,
+			),
 			protocol.ServerboundCloseWindow: WrapPacketHandlers(&protocol.ServerCloseWindow{},
 				proxy.HandleCloseWindow,
 			),
@@ -86,6 +90,9 @@ var (
 		protocol.ConnStatePlay: ProtocolStateHandler{
 			protocol.ClientboundJoinGame: WrapPacketHandlers(&protocol.JoinGame{},
 				proxy.HandleJoinGame, unlimitedcps.HandleJoinGame,
+			),
+			protocol.ClientboundUpdateHealth: WrapPacketHandlers(&protocol.UpdateHealth{},
+				proxy.HandleUpdateHealth, autosoup.HandleUpdateHealth,
 			),
 			protocol.ClientboundPlayerPositionAndLook: WrapPacketHandlers(&protocol.PlayerPositionAndLook{},
 				proxy.HandlePlayerPositionAndLook,
@@ -120,18 +127,18 @@ var (
 			protocol.ClientboundBlockChange: WrapPacketHandlers(&protocol.BlockChange{},
 				nuker.HandleBlockChange,
 			),
-			// protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
-			// 	proxy.HandleOpenWindow, cheststealer.HandleOpenWindow,
-			// ),
-			// protocol.ClientboundCloseWindow: WrapPacketHandlers(&protocol.CloseWindow{},
-			// 	proxy.HandleCloseWindow,
-			// ),
-			// protocol.ClientboundSetSlot: WrapPacketHandlers(&protocol.SetSlot{},
-			// 	proxy.HandleSetSlot, cheststealer.HandleSetSlot,
-			// ),
-			// protocol.ClientboundWindowItems: WrapPacketHandlers(&protocol.WindowItems{},
-			// 	proxy.HandleWindowItems, cheststealer.HandleWindowItems,
-			// ),
+			protocol.ClientboundOpenWindow: WrapPacketHandlers(&protocol.OpenWindow{},
+				proxy.HandleOpenWindow, /*cheststealer.HandleOpenWindow,*/
+			),
+			protocol.ClientboundCloseWindow: WrapPacketHandlers(&protocol.CloseWindow{},
+				proxy.HandleCloseWindow,
+			),
+			protocol.ClientboundSetSlot: WrapPacketHandlers(&protocol.SetSlot{},
+				proxy.HandleSetSlot, /*cheststealer.HandleSetSlot,*/
+			),
+			protocol.ClientboundWindowItems: WrapPacketHandlers(&protocol.WindowItems{},
+				proxy.HandleWindowItems, /*cheststealer.HandleWindowItems,*/
+			),
 			protocol.ClientboundPlayerAbilities: WrapPacketHandlers(&protocol.PlayerAbilities{},
 				flight.HandlePlayerAbilities,
 			),

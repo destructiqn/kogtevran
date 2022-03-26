@@ -28,8 +28,11 @@ type PlayerHandler interface {
 	SetFlying(isFlying bool)
 	GetLocation() *minecraft.Location
 	GetEntityID() int32
+	GetHealth() float64
 	GetPlayerName() string
 	Attack(target int) error
+	ChangeSlot(slot int) error
+	GetCurrentSlot() int
 }
 
 type EntityHandler interface {
@@ -56,6 +59,8 @@ type Window interface {
 	GetContents() map[int]pk.Slot
 	GetItem(slot int) pk.Slot
 	PutItem(slot int, item pk.Slot)
+	Click(slot int, mode, button byte) error
+	Move(from, to int) error
 }
 
 type InventoryHandler interface {

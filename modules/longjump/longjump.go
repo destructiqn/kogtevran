@@ -30,9 +30,9 @@ func (l *LongJump) GetIdentifier() string {
 }
 
 func (l *LongJump) Boost(yaw float64) (x int16, y int16, z int16) {
-	x = int16(-math.Sin(float64(yaw)*(math.Pi/180.0)) * float64(l.Power*5000))
+	x = int16(-math.Sin(float64(yaw)*(math.Pi/180.0)) * l.Power * 5000)
 	y = int16(2500 * l.Height)
-	z = int16(math.Cos(float64(yaw)*(math.Pi/180.0)) * float64(l.Power*5000))
+	z = int16(math.Cos(float64(yaw)*(math.Pi/180.0)) * l.Power * 5000)
 	return
 }
 
