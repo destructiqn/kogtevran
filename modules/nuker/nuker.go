@@ -17,9 +17,10 @@ type Nuker struct {
 	Radius int     `option:"radius"`
 	Delay  float64 `option:"delay"`
 
-	queueLock  sync.Mutex
-	backlog    map[pk.Position]bool
-	breakQueue chan *Task
+	queueLock   sync.Mutex
+	backlog     map[pk.Position]bool
+	breakQueue  chan *Task
+	toggleQueue chan bool
 }
 
 func (n *Nuker) GetDescription() []string {
@@ -37,11 +38,18 @@ func (n *Nuker) GetIdentifier() string {
 	return modules.ModuleNuker
 }
 
+func (n *Nuker) Toggle() (bool, error) {
+	v, err := n.SimpleTickingModule.Toggle()
+	n.toggleQueue <- v
+	return v, err
+}
+
 func (n *Nuker) Tick() error {
 	center := n.Tunnel.GetPlayerHandler().GetLocation()
 
 	if n.breakQueue == nil {
 		n.breakQueue = make(chan *Task)
+		n.toggleQueue = make(chan bool)
 		n.backlog = make(map[pk.Position]bool)
 		go n.handleQueue()
 	}

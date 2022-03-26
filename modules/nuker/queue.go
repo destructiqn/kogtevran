@@ -13,12 +13,19 @@ type Task struct {
 
 func (n *Nuker) handleQueue() {
 	for {
-		task := <-n.breakQueue
-		BreakBlock(task.Location, task.Delay, n.Tunnel)
+		select {
+		case task := <-n.breakQueue:
+			BreakBlock(task.Location, task.Delay, n.Tunnel)
 
-		n.queueLock.Lock()
-		delete(n.backlog, task.Location)
-		n.queueLock.Unlock()
+			n.queueLock.Lock()
+			delete(n.backlog, task.Location)
+			n.queueLock.Unlock()
+		case status := <-n.toggleQueue:
+			if !status {
+				// If disabled, wait for enable
+				<-n.toggleQueue
+			}
+		}
 	}
 }
 
