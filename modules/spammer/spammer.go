@@ -26,6 +26,6 @@ func (s *Spammer) GetIdentifier() string {
 }
 
 func (s *Spammer) Tick() error {
-	processedMsg := transliterate(s.Message)
+	processedMsg := Obfuscate(s.Message)
 	return s.Tunnel.WriteServer(pk.Marshal(protocol.ServerboundChatMessage, pk.String(processedMsg)))
 }
