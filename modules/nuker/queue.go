@@ -13,21 +13,30 @@ type Task struct {
 
 func (n *Nuker) handleQueue() {
 	for {
-		task := <-n.breakQueue
-		BreakBlock(task.Location, task.Delay, n.Tunnel)
+		select {
+		case task := <-n.breakQueue:
+			BreakBlock(task.Location, task.Delay, n.Tunnel)
 
-		n.queueLock.Lock()
-		delete(n.backlog, task.Location)
-		n.queueLock.Unlock()
+			n.queueLock.Lock()
+			delete(n.backlog, task.Location)
+			n.queueLock.Unlock()
+		case status := <-n.toggleQueue:
+			if !status {
+				// If disabled, wait for enable
+				<-n.toggleQueue
+			}
+		}
 	}
 }
 
 func (n *Nuker) enqueue(task *Task) {
-	if _, ok := n.backlog[task.Location]; !ok && n.backlog != nil {
-		n.queueLock.Lock()
-		n.backlog[task.Location] = true
-		n.queueLock.Unlock()
+    n.queueLock.Lock()
+    if _, ok := n.backlog[task.Location]; !ok && n.backlog != nil {
+        n.backlog[task.Location] = true
+        n.queueLock.Unlock()
 
-		n.breakQueue <- task
-	}
+        n.breakQueue <- task
+    } else {
+        n.queueLock.Unlock()
+    }
 }
