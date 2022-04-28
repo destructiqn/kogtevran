@@ -15,7 +15,7 @@ var Categories = map[string][]string{
 	CategoryPlayer:   {ModuleNoFall, ModuleChestStealer, ModuleNoBadEffects, ModuleUnlimitedCPS, ModuleAutoSoup},
 	CategoryWorld:    {ModuleFastBreak, ModuleNuker},
 	CategoryVisual:   {ModulePlayerESP, ModuleChestESP},
-	CategoryMisc:     {ModuleSpammer, ModuleCMDCam},
+	CategoryMisc:     {ModuleSpammer},
 }
 
 type CategoryList []Category
