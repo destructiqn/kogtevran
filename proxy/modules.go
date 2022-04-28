@@ -181,7 +181,6 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 	}
 
 	for _, category := range categories {
-		y := headerHeight + moduleMargin*3 + 4
 		modulesList := make(ModuleList, 0)
 
 		for _, moduleID := range category.ModuleIDs {
@@ -189,6 +188,12 @@ func (m *ModuleHandler) GetModulesDetails() []map[string]interface{} {
 				modulesList = append(modulesList, module)
 			}
 		}
+
+		if len(modulesList) == 0 {
+			continue
+		}
+
+		y := headerHeight + moduleMargin*3 + 4
 
 		sort.Sort(modulesList)
 		categoryControlID := fmt.Sprintf("kv.cc.%s.bg", category.Name)
