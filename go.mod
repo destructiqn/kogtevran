@@ -12,5 +12,6 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
+	h12.io/socks v1.0.3 // indirect
 	pkg.re/essentialkaos/translit.v2 v2.0.3+incompatible // indirect
 )

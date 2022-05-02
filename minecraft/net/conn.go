@@ -51,8 +51,8 @@ type Conn struct {
 }
 
 // DialMC create a Minecraft connection
-func DialMC(addr string) (*Conn, error) {
-	conn, err := net.Dial("tcp", addr)
+func DialMC(addr string, dial func(string, string) (net.Conn, error)) (*Conn, error) {
+	conn, err := dial("tcp", addr)
 	return &Conn{
 		Socket:    conn,
 		Reader:    conn,

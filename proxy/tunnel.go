@@ -27,6 +27,7 @@ type MinecraftTunnel struct {
 	ClientWrite sync.Mutex
 
 	State               protocol.ConnectionState
+	TargetAddress       string
 	EnableEncryptionS2C chan []byte
 	EnableEncryptionC2S chan []byte
 

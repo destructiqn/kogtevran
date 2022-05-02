@@ -178,7 +178,7 @@ func HandleHandshake(packet protocol.Packet, tunnel generic.Tunnel) (result *gen
 		tunnel.SetState(protocol.ConnStateLogin)
 	}
 
-	host, sPort, err := net.SplitHostPort(tunnel.(*proxy.MinecraftTunnel).Server.Socket.RemoteAddr().String())
+	host, sPort, err := net.SplitHostPort(tunnel.(*proxy.MinecraftTunnel).TargetAddress)
 	if err != nil {
 		return
 	}

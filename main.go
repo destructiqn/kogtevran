@@ -4,9 +4,11 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
+	"h12.io/socks"
 	"io"
 	"log"
 	"math/rand"
+	stdnet "net"
 	"net/http"
 	"os"
 	"runtime/debug"
@@ -63,13 +65,21 @@ func main() {
 			continue
 		}
 
-		server, err := net.DialMC(GetRemoteAddr())
+		dial := stdnet.Dial
+		if proxyAddr, ok := os.LookupEnv("KV_PROXY_ADDR"); ok {
+			proto := os.Getenv("KV_PROXY_PROTOCOL")
+			dial = socks.Dial(fmt.Sprintf("%s://%s?timeout=5s", proto, proxyAddr))
+		}
+
+		targetAddr := GetRemoteAddr()
+		server, err := net.DialMC(targetAddr, dial)
 		if err != nil {
 			log.Println("error connecting to vimeworld:", err)
 			continue
 		}
 
 		conn := proxy.WrapConn(server, &client)
+		conn.TargetAddress = targetAddr
 
 		go pipe(conn, protocol.ConnS2C)
 		go pipe(conn, protocol.ConnC2S)
